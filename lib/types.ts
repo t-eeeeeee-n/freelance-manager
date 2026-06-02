@@ -29,6 +29,9 @@ export interface WorkLog {
   work_date: string
   planned_hours: number | null
   actual_hours: number | null
+  actual_start_time: string | null  // 'HH:MM'
+  actual_end_time: string | null    // 'HH:MM'
+  break_minutes: number             // default 0
   memo: string | null
   status: WorkLogStatus
 }
