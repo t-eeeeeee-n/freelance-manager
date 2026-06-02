@@ -70,7 +70,11 @@ export function WorkLogsUI({ logs, clients, contracts }: { logs: WorkLog[]; clie
                     <div className="muted" style={{ fontSize: 'var(--small)' }}>{clientMap[l.client_id] ?? '—'}</div>
                   </td>
                   <td className="ar num dim">{l.planned_hours != null ? `${l.planned_hours}h` : '—'}</td>
-                  <td className="ar num" style={{ fontWeight: 600 }}>{l.actual_hours != null ? `${l.actual_hours}h` : '—'}</td>
+                  <td className="ar num" style={{ fontWeight: 600 }}>
+                    {l.actual_start_time && l.actual_end_time
+                      ? `${l.actual_start_time.slice(0,5)}〜${l.actual_end_time.slice(0,5)}`
+                      : l.actual_hours != null ? `${l.actual_hours}h` : '—'}
+                  </td>
                   <td><StatusChip status={l.status} /></td>
                   <td className="dim" style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 'var(--small)' }}>
                     {l.memo || <span className="muted">—</span>}
@@ -103,9 +107,22 @@ function WorkLogForm({ mode, record, clients, contracts, onSave, onCancel }: {
   onSave: (fd: FormData) => Promise<{ error: string | null }>; onCancel: () => void
 }) {
   const [clientId, setClientId] = React.useState(record?.client_id ?? '')
+  const [startTime, setStartTime] = React.useState(record?.actual_start_time?.slice(0, 5) ?? '')
+  const [endTime, setEndTime] = React.useState(record?.actual_end_time?.slice(0, 5) ?? '')
+  const [breakMins, setBreakMins] = React.useState(record?.break_minutes ?? 0)
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const formRef = React.useRef<HTMLFormElement>(null)
+
+  // Calculate preview hours
+  const previewHours = React.useMemo(() => {
+    if (!startTime || !endTime) return null
+    const [sh, sm] = startTime.split(':').map(Number)
+    const [eh, em] = endTime.split(':').map(Number)
+    const total = (eh * 60 + em) - (sh * 60 + sm) - breakMins
+    if (total <= 0) return null
+    return Math.round(total / 6) / 10
+  }, [startTime, endTime, breakMins])
 
   const contractOpts = contracts.filter((c) => c.client_id === clientId && (c.is_active || c.id === record?.contract_id))
   const activeClients = clients.filter((c) => c.is_active || c.id === record?.client_id)
@@ -146,9 +163,27 @@ function WorkLogForm({ mode, record, clients, contracts, onSave, onCancel }: {
         <Field label="予定時間（h）">
           <input className="input num" type="number" name="planned_hours" defaultValue={record?.planned_hours ?? ''} step="0.5" placeholder="6" />
         </Field>
-        <Field label="実績時間（h）">
-          <input className="input num" type="number" name="actual_hours" defaultValue={record?.actual_hours ?? ''} step="0.5" placeholder="6" />
+        <Field label="開始時刻">
+          <input className="input" type="time" name="actual_start_time"
+            value={startTime} onChange={(e) => setStartTime(e.target.value)} />
         </Field>
+        <Field label="終了時刻">
+          <input className="input" type="time" name="actual_end_time"
+            value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+        </Field>
+        <Field label="休憩（分）" hint="既定0分">
+          <input className="input num" type="number" name="break_minutes"
+            value={breakMins} onChange={(e) => setBreakMins(Number(e.target.value))} min="0" step="15" />
+        </Field>
+        {previewHours != null && (
+          <Field label="実働時間（計算）" full>
+            <div className="input" style={{ background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-dim)' }}>
+              <span style={{ fontSize: 'var(--small)' }}>終了 − 開始 − 休憩</span>
+              <span className="num" style={{ fontWeight: 700, color: 'var(--text)', fontSize: 'var(--h2)' }}>{previewHours}h</span>
+            </div>
+          </Field>
+        )}
+        <input type="hidden" name="actual_hours" value={previewHours ?? ''} />
         <Field label="メモ" full>
           <input className="input" name="memo" defaultValue={record?.memo ?? ''} placeholder="作業内容など（任意）" />
         </Field>
