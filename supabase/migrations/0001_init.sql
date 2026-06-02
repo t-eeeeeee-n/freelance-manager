@@ -1,3 +1,15 @@
+-- =============================================================================
+-- ⚠️ SECURITY (必読): このアプリは個人専用（単一ユーザー）。
+-- 下の RLS ポリシーは「認証済みユーザー全員」に全データを許可する。
+-- これだけだと「サインアップできる第三者」も対象になるため、必ず両方を行うこと:
+--   (1) Supabase ダッシュボード → Authentication → Sign In / Providers で
+--       "Allow new users to sign up"（公開サインアップ）を OFF にする。
+--       自分のアカウントは Authentication → Users から手動で1件だけ作成する。
+--   (2) [推奨・多層防御] アカウント作成後、本ファイル末尾の「オーナー限定ハードニング」
+--       ブロックを自分の UID で適用し、特定ユーザーのみに絞る。
+-- (1) 単独でも実用上は守られるが、(1)+(2) を推奨。
+-- =============================================================================
+
 -- clients
 create table clients (
   id uuid primary key default gen_random_uuid(),
@@ -63,3 +75,24 @@ create policy "auth all" on clients   for all to authenticated using (true) with
 create policy "auth all" on contracts for all to authenticated using (true) with check (true);
 create policy "auth all" on work_logs for all to authenticated using (true) with check (true);
 create policy "auth all" on expenses  for all to authenticated using (true) with check (true);
+
+-- =============================================================================
+-- オーナー限定ハードニング（推奨・多層防御）
+-- 自分のアカウントを作成後、Authentication → Users で自分の User UID をコピーし、
+-- 下の <OWNER_UUID> を置き換えて実行する。これで「特定の1ユーザー」だけに絞れる。
+-- （上の "auth all" ポリシーを置き換える）
+-- -----------------------------------------------------------------------------
+-- drop policy "auth all" on clients;
+-- drop policy "auth all" on contracts;
+-- drop policy "auth all" on work_logs;
+-- drop policy "auth all" on expenses;
+--
+-- create policy "owner only" on clients   for all to authenticated
+--   using (auth.uid() = '<OWNER_UUID>') with check (auth.uid() = '<OWNER_UUID>');
+-- create policy "owner only" on contracts for all to authenticated
+--   using (auth.uid() = '<OWNER_UUID>') with check (auth.uid() = '<OWNER_UUID>');
+-- create policy "owner only" on work_logs for all to authenticated
+--   using (auth.uid() = '<OWNER_UUID>') with check (auth.uid() = '<OWNER_UUID>');
+-- create policy "owner only" on expenses  for all to authenticated
+--   using (auth.uid() = '<OWNER_UUID>') with check (auth.uid() = '<OWNER_UUID>');
+-- =============================================================================
