@@ -52,6 +52,7 @@ export async function deleteExpense(id: string) {
 }
 
 export async function copyRecurringFromPrevMonth(targetYearMonth: string) {
+  if (!/^\d{4}-\d{2}$/.test(targetYearMonth)) return { error: '年月の形式が正しくありません' }
   const [y, m] = targetYearMonth.split('-').map(Number)
   const prev = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`
   const prevStart = `${prev}-01`

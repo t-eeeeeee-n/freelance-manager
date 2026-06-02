@@ -90,6 +90,7 @@
 - **アクション**: `createExpense` / `updateExpense(id, ...)` / `deleteExpense(id)` ＋「先月の定期経費を複製」ボタン → `copyRecurringFromPrevMonth(targetYearMonth)`。
 - **状態**: 対象年月セレクタ（複製ボタンに渡す）。経費一覧（日付降順、計上額を表示）。「前月に定期経費がありません」等のエラー表示。
 - input の `name`: `expense_date`,`category`,`amount`,`allocation_rate`,`is_recurring`,`memo`。
+- ⚠️ **実装制約**: `is_recurring` は `<input type="checkbox" name="is_recurring">` の **value 属性を指定しない**こと（ブラウザデフォルトの `"on"` をサーバ側で受け取る）。`value="true"` 等を設定すると定期フラグが常に `false` になる。
 
 ## 画面7: 月次サマリー（`/summary?ym=YYYY-MM`）
 - **目的**: 年月を選び、契約別の請求と月の経費合計・合計金額を確認。表示専用。
@@ -103,3 +104,4 @@
 
 ## claude design への依頼まとめ
 上記7画面＋共通シェルについて、一貫したデザインシステム（claude design 側で配色・タイポ・余白・コンポーネントを定義）で UI を作成してください。データ項目名（input の `name`）と Server Action のシグネチャは本ブリーフの通り維持してください。ロジック・計算結果はサーバ側で確定済みのものを表示するだけです。
+3案くらい出せる？
