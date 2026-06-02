@@ -25,7 +25,7 @@ export function calculateBilling(input: BillingInput): BillingResult {
 
     case 'monthly_minimum': {
       const billableHours = Math.max(input.workedHours, min)
-      if (input.overtimeHourlyRate != null) {
+      if (input.overtimeHourlyRate != null && min > 0) {
         const baseAmount = min * base
         const overtimeAmount = Math.max(input.workedHours - min, 0) * input.overtimeHourlyRate
         return { billableHours, amount: Math.round(baseAmount + overtimeAmount) }

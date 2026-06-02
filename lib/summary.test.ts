@@ -63,4 +63,36 @@ describe('buildMonthlySummary', () => {
     expect(res.expenseTotal).toBe(123000)
     expect(res.totalBilling).toBe(50000)
   })
+
+  it('複数契約: 期間外 fixed は0、hourly のみ totalBilling に寄与する', () => {
+    const c1 = contract({ id: 'c1', client_id: 'cl1', billing_type: 'hourly', base_hourly_rate: 5000 })
+    const c2 = contract({
+      id: 'c2', client_id: 'cl2', billing_type: 'fixed', fixed_amount: 200000,
+      base_hourly_rate: null, start_date: '2026-07-01', end_date: '2026-12-31',
+    })
+    const res = buildMonthlySummary('2026-06', [c1, c2], [
+      log({ id: 'w1', contract_id: 'c1', client_id: 'cl1', actual_hours: 10, work_date: '2026-06-15' }),
+    ], 0)
+    expect(res.rows).toHaveLength(2)
+    const row2 = res.rows.find((r) => r.contractId === 'c2')!
+    expect(row2.amount).toBe(0)
+    expect(res.totalBilling).toBe(50000)
+  })
+
+  it('期間境界inclusive: end_date が月初と同日の契約は期間内', () => {
+    const c = contract({
+      billing_type: 'fixed', fixed_amount: 200000, base_hourly_rate: null,
+      start_date: '2026-01-01', end_date: '2026-06-01',
+    })
+    const res = buildMonthlySummary('2026-06', [c], [], 0)
+    expect(res.rows[0].amount).toBe(200000)
+  })
+
+  it('open-ended契約 (start/end null) は常に期間内', () => {
+    const c = contract({ start_date: null, end_date: null })
+    const res = buildMonthlySummary('2026-06', [c], [
+      log({ actual_hours: 10, work_date: '2026-06-10' }),
+    ], 0)
+    expect(res.rows[0].amount).toBe(50000)
+  })
 })

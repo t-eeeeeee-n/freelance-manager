@@ -69,4 +69,31 @@ describe('calculateBilling', () => {
     })
     expect(r.amount).toBe(Math.round(7.5 * 3333))
   })
+
+  // BUG-1: minimumHours が null/0 のとき overtime 単価を使ってしまうバグ
+  it('monthly_minimum: 超過単価あり・minimumHours null → 全時間が基本単価', () => {
+    const r = calculateBilling({
+      billingType: 'monthly_minimum', workedHours: 100, minimumHours: null,
+      baseHourlyRate: 5000, overtimeHourlyRate: 6000, fixedAmount: null, isWithinContractPeriod: true,
+    })
+    expect(r.amount).toBe(500000)
+    expect(r.billableHours).toBe(100)
+  })
+
+  it('monthly_minimum: 超過単価あり・実働 == 最低 → 超過分は0', () => {
+    const r = calculateBilling({
+      billingType: 'monthly_minimum', workedHours: 100, minimumHours: 100,
+      baseHourlyRate: 5000, overtimeHourlyRate: 6000, fixedAmount: null, isWithinContractPeriod: true,
+    })
+    expect(r.amount).toBe(500000)
+    expect(r.billableHours).toBe(100)
+  })
+
+  it('monthly_minimum: 超過単価あり・小数時間 → 合計を1回だけ丸める', () => {
+    const r = calculateBilling({
+      billingType: 'monthly_minimum', workedHours: 120.5, minimumHours: 100,
+      baseHourlyRate: 5001, overtimeHourlyRate: 6001, fixedAmount: null, isWithinContractPeriod: true,
+    })
+    expect(r.amount).toBe(Math.round(100 * 5001 + 20.5 * 6001))
+  })
 })
