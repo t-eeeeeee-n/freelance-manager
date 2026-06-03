@@ -8,6 +8,7 @@ import { Icon } from '@/components/icon'
 import { StatusChip } from '@/components/page-chrome'
 import { CustomSelect } from '@/components/custom-select'
 import { CustomTimePicker } from '@/components/custom-time-picker'
+import { CustomDatePicker } from '@/components/custom-date-picker'
 
 // ── Helpers ──────────────────────────────────────────────────────
 function toYMD(d: Date) {
@@ -291,7 +292,7 @@ function QuickForm({
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <div className="field" style={{ width: 140, flexShrink: 0 }}>
             <label>日付</label>
-            <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} required />
+            <CustomDatePicker value={date} onChange={setDate} required />
           </div>
           <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>開始時刻</label>
