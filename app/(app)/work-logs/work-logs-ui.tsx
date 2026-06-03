@@ -302,34 +302,37 @@ function QuickForm({
         <span style={{ fontSize: 'var(--small)', color: 'var(--accent-text)', opacity: 0.75 }}>{clientName}</span>
       </div>
       <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)' }}>
-        {/* 時刻行：開始 → 終了 → 実働時間ピル */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
-          <div className="field" style={{ flex: 1 }}>
+        <style>{`@keyframes hoursAppear{from{opacity:0;transform:scale(0.8) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+
+        {/* 時刻行：開始 → 終了 → 実働ピル（常にスペース確保してズレ防止） */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>開始時刻</label>
             <CustomTimePicker value={startTime} onChange={setStartTime} placeholder="--:--" name="actual_start_time" />
           </div>
-          <span style={{ paddingBottom: 10, color: 'var(--text-faint)', fontSize: 18, lineHeight: 1 }}>→</span>
-          <div className="field" style={{ flex: 1 }}>
+          <span style={{ paddingBottom: 10, color: 'var(--text-faint)', fontSize: 16, lineHeight: 1, flexShrink: 0 }}>→</span>
+          <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>終了時刻</label>
             <CustomTimePicker value={endTime} onChange={setEndTime} placeholder="--:--" name="actual_end_time" />
           </div>
-          {previewHours != null && (
-            <div style={{ paddingBottom: 6, animation: 'hoursAppear 0.22s cubic-bezier(0.2,0.8,0.3,1) both' }}>
-              <style>{`@keyframes hoursAppear{from{opacity:0;transform:scale(0.8) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+          {/* 常に同じ幅を確保 → ピル表示でもフィールドがズレない */}
+          <div style={{ width: 84, paddingBottom: 6, flexShrink: 0 }}>
+            {previewHours != null && (
               <div style={{
+                animation: 'hoursAppear 0.22s cubic-bezier(0.2,0.8,0.3,1) both',
                 display: 'inline-flex', alignItems: 'baseline', gap: 2,
                 background: 'var(--accent-soft)', color: 'var(--accent-text)',
-                borderRadius: 999, padding: '6px 14px', fontWeight: 700,
+                borderRadius: 999, padding: '6px 12px', fontWeight: 700, whiteSpace: 'nowrap',
               }}>
                 <span className="num" style={{ fontSize: 'var(--h2)', fontWeight: 800, lineHeight: 1 }}>{previewHours}</span>
                 <span style={{ fontSize: 'var(--small)' }}>h</span>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px', marginBottom: 12 }}>
-          <div className="field">
+        <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div className="field" style={{ width: 90, flexShrink: 0 }}>
             <label>休憩（分）</label>
             <input
               className="input num"
@@ -341,7 +344,7 @@ function QuickForm({
               placeholder="0"
             />
           </div>
-          <div className="field">
+          <div className="field" style={{ width: 130, flexShrink: 0 }}>
             <label>状態</label>
             <CustomSelect
               name="status"
@@ -354,7 +357,7 @@ function QuickForm({
               ]}
             />
           </div>
-          <div className="field" style={{ gridColumn: '1 / -1' }}>
+          <div className="field" style={{ flex: 1, minWidth: 160 }}>
             <label>メモ（任意）</label>
             <input className="input" value={memo} onChange={e => setMemo(e.target.value)} placeholder="作業内容など" />
           </div>
