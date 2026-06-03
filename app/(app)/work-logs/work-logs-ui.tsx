@@ -290,7 +290,7 @@ function QuickForm({
       <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)' }}>
         {/* 日付 + 時刻 + 実働 + 休憩 + 状態 */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-          <div className="field" style={{ width: 140, flexShrink: 0 }}>
+          <div className="field" style={{ width: 175, flexShrink: 0 }}>
             <label>日付</label>
             <CustomDatePicker value={date} onChange={setDate} required />
           </div>
