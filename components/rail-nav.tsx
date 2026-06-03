@@ -38,7 +38,7 @@ export function RailNav() {
           data-active={path.startsWith(n.href) ? 'true' : 'false'}
           aria-label={n.label}
         >
-          <Icon name={n.icon} size={20} />
+          <Icon name={n.icon} size={20} style={{ flexShrink: 0 }} />
           <span className="rail__label">{n.label}</span>
           {!expanded && <span className="tip">{n.label}</span>}
         </Link>
@@ -46,22 +46,22 @@ export function RailNav() {
       <div className="rail__foot">
         <form action={signOut}>
           <button type="submit" className="railbtn" aria-label="ログアウト">
-            <Icon name="logout" size={20} />
+            <Icon name="logout" size={20} style={{ flexShrink: 0 }} />
             <span className="rail__label">ログアウト</span>
             {!expanded && <span className="tip">ログアウト</span>}
           </button>
         </form>
-        <button
-          type="button"
-          className="railbtn"
-          onClick={toggle}
-          aria-label={expanded ? 'サイドバーを閉じる' : 'サイドバーを開く'}
-        >
-          <Icon name={expanded ? 'chevL' : 'chevR'} size={18} />
-          <span className="rail__label" style={{ fontSize: 11, color: 'var(--text-faint)' }}>閉じる</span>
-          {!expanded && <span className="tip">展開</span>}
-        </button>
       </div>
+
+      {/* 右端中央の開閉タブ */}
+      <button
+        type="button"
+        className="rail__toggle"
+        onClick={toggle}
+        aria-label={expanded ? 'サイドバーを閉じる' : 'サイドバーを開く'}
+      >
+        <Icon name={expanded ? 'chevL' : 'chevR'} size={13} />
+      </button>
     </nav>
   )
 }
