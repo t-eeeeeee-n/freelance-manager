@@ -261,7 +261,7 @@ function QuickForm({
   return (
     <form onSubmit={handleSubmit} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
         {/* 行1: 日付 */}
-        <div className="field">
+        <div className="field" style={{ width: 175 }}>
           <label>日付</label>
           <CustomDatePicker value={date} onChange={setDate} required />
         </div>
@@ -290,9 +290,6 @@ function QuickForm({
                 { value: 'billed', label: '請求済' },
               ]} />
           </div>
-          <div style={{ paddingBottom: 10, marginLeft: 'auto', fontSize: 'var(--small)', color: 'var(--text-faint)', whiteSpace: 'nowrap', alignSelf: 'flex-end' }}>
-            {previewHours != null ? `実働 ${previewHours}h` : ''}
-          </div>
         </div>
         {/* 行3: メモ */}
         <div className="field">
@@ -300,7 +297,11 @@ function QuickForm({
           <input className="input" value={memo} onChange={e => setMemo(e.target.value)} placeholder="作業内容など" />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 'var(--small)', color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>
+            {previewHours != null ? `実働 ${previewHours}h` : ''}
+          </span>
+          <span className="spacer" />
           <button type="button" className="btn btn--ghost" onClick={onCancel}>キャンセル</button>
           <button type="submit" className="btn btn--primary" disabled={busy || !startTime || !endTime}>
             {busy ? '保存中…' : existing ? '更新する' : '記録する'}
