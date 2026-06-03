@@ -302,20 +302,33 @@ function QuickForm({
         <span style={{ fontSize: 'var(--small)', color: 'var(--accent-text)', opacity: 0.75 }}>{clientName}</span>
       </div>
       <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '12px 16px',
-          marginBottom: 12,
-        }}>
-          <div className="field">
+        {/* 時刻行：開始 → 終了 → 実働時間ピル */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
+          <div className="field" style={{ flex: 1 }}>
             <label>開始時刻</label>
             <CustomTimePicker value={startTime} onChange={setStartTime} placeholder="--:--" name="actual_start_time" />
           </div>
-          <div className="field">
+          <span style={{ paddingBottom: 10, color: 'var(--text-faint)', fontSize: 18, lineHeight: 1 }}>→</span>
+          <div className="field" style={{ flex: 1 }}>
             <label>終了時刻</label>
             <CustomTimePicker value={endTime} onChange={setEndTime} placeholder="--:--" name="actual_end_time" />
           </div>
+          {previewHours != null && (
+            <div style={{ paddingBottom: 6, animation: 'hoursAppear 0.22s cubic-bezier(0.2,0.8,0.3,1) both' }}>
+              <style>{`@keyframes hoursAppear{from{opacity:0;transform:scale(0.8) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+              <div style={{
+                display: 'inline-flex', alignItems: 'baseline', gap: 2,
+                background: 'var(--accent-soft)', color: 'var(--accent-text)',
+                borderRadius: 999, padding: '6px 14px', fontWeight: 700,
+              }}>
+                <span className="num" style={{ fontSize: 'var(--h2)', fontWeight: 800, lineHeight: 1 }}>{previewHours}</span>
+                <span style={{ fontSize: 'var(--small)' }}>h</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px', marginBottom: 12 }}>
           <div className="field">
             <label>休憩（分）</label>
             <input
@@ -347,14 +360,7 @@ function QuickForm({
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {previewHours != null && (
-            <span style={{ fontSize: 'var(--small)', color: 'var(--text-dim)', fontWeight: 600 }}>
-              実働{' '}
-              <span className="num" style={{ fontSize: 'var(--h2)', fontWeight: 800, color: 'var(--text)' }}>{previewHours}</span>h
-            </span>
-          )}
-          <span className="spacer" />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button type="button" className="btn btn--ghost" onClick={onCancel}>キャンセル</button>
           <button type="submit" className="btn btn--primary" disabled={busy || !startTime || !endTime}>
             {busy ? '保存中…' : existing ? '更新する' : '記録する'}
