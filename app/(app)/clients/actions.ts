@@ -9,7 +9,7 @@ export async function createClientRecord(formData: FormData) {
 
   const supabase = await createClient()
   const { error } = await supabase.from('clients').insert({ name, memo })
-  if (error) return { error: `保存に失敗しました: ${error.message} (code: ${error.code})` }
+  if (error) return { error: '保存に失敗しました' }
   revalidatePath('/clients')
   return { error: null }
 }
