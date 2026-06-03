@@ -308,13 +308,10 @@ function QuickForm({
             <label>開始時刻</label>
             <CustomTimePicker value={startTime} onChange={setStartTime} placeholder="--:--" name="actual_start_time" />
           </div>
-          <span style={{ paddingBottom: 10, color: 'var(--text-faint)', flexShrink: 0 }}>-</span>
+
           <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>終了時刻</label>
             <CustomTimePicker value={endTime} onChange={setEndTime} placeholder="--:--" name="actual_end_time" />
-          </div>
-          <div style={{ paddingBottom: 10, width: 48, flexShrink: 0, fontSize: 'var(--small)', color: 'var(--text-faint)' }}>
-            {previewHours != null ? `${previewHours}h` : ''}
           </div>
           <div className="field" style={{ width: 90, flexShrink: 0 }}>
             <label>休憩（分）</label>
@@ -340,6 +337,9 @@ function QuickForm({
                 { value: 'billed', label: '請求済' },
               ]}
             />
+          </div>
+          <div style={{ paddingBottom: 10, marginLeft: 'auto', fontSize: 'var(--small)', color: 'var(--text-faint)', whiteSpace: 'nowrap', alignSelf: 'flex-end' }}>
+            {previewHours != null ? `実働 ${previewHours}h` : ''}
           </div>
         </div>
 
