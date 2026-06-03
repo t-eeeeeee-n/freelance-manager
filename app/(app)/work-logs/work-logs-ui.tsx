@@ -233,7 +233,9 @@ function QuickForm({
   const [endTime, setEndTime] = React.useState(existing?.actual_end_time?.slice(0, 5) ?? '')
   const [breakMins, setBreakMins] = React.useState(existing?.break_minutes ?? 0)
   const [memo, setMemo] = React.useState(existing?.memo ?? '')
-  const [status, setStatus] = React.useState<WorkLogStatus>(existing?.status ?? 'worked')
+  const [status, setStatus] = React.useState<WorkLogStatus>(
+    existing ? existing.status as WorkLogStatus : 'worked'
+  )
   const [busy, setBusy] = React.useState(false)
 
   const previewHours = React.useMemo(() => {
@@ -285,7 +287,6 @@ function QuickForm({
             <label>状態</label>
             <CustomSelect name="status" value={status} onChange={v => setStatus(v as WorkLogStatus)}
               options={[
-                { value: 'planned', label: '予定' },
                 { value: 'worked', label: '稼働済' },
                 { value: 'billed', label: '請求済' },
               ]} />
