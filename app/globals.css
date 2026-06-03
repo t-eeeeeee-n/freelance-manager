@@ -339,3 +339,15 @@ tr:hover .rowactions { opacity: 1; }
 .csel__opt:focus-visible { outline: none; background: var(--accent-soft); }
 .csel__check { opacity: 0; flex: 0 0 auto; }
 .csel__opt[data-selected="true"] .csel__check { opacity: 1; }
+
+/* ── Contract tabs ── */
+.ctabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: var(--gap); flex-wrap: wrap; }
+.ctab {
+  padding: 9px 16px; border: 0; background: transparent; cursor: pointer;
+  font-family: var(--font-sans); font-size: var(--small); font-weight: 600;
+  color: var(--text-dim); border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.14s; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  white-space: nowrap;
+}
+.ctab:hover { color: var(--text); background: var(--surface-2); }
+.ctab[data-active="true"] { color: var(--accent-text); border-bottom-color: var(--accent); background: var(--accent-soft); }
