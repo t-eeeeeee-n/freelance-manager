@@ -6,6 +6,7 @@ import { useEditor, Drawer, EditorShell, Field } from '@/components/drawer'
 import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
 import { BillingChip } from '@/components/page-chrome'
+import { CustomSelect } from '@/components/custom-select'
 
 type BT = 'hourly' | 'monthly_minimum' | 'fixed'
 
@@ -96,6 +97,7 @@ function ContractForm({ mode, record, clients, onSave, onCancel }: {
   onSave: (fd: FormData) => Promise<{ error: string | null }>; onCancel: () => void
 }) {
   const [bt, setBt] = React.useState<BT>((record?.billing_type as BT) ?? 'hourly')
+  const [clientId, setClientId] = React.useState(record?.client_id ?? '')
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const formRef = React.useRef<HTMLFormElement>(null)
@@ -115,20 +117,27 @@ function ContractForm({ mode, record, clients, onSave, onCancel }: {
     <EditorShell mode={mode} title="契約条件" error={error} submitting={busy} onSubmit={submit} onCancel={onCancel}>
       <form ref={formRef} style={{ display: 'contents' }}>
         <Field label="クライアント" req>
-          <select className="select" name="client_id" defaultValue={record?.client_id ?? ''} required>
-            <option value="">選択してください</option>
-            {activeClients.map((c) => <option key={c.id} value={c.id}>{c.name}{c.is_active ? '' : '（無効）'}</option>)}
-          </select>
+          <CustomSelect
+            name="client_id"
+            value={clientId}
+            onChange={(v) => setClientId(v)}
+            placeholder="選択してください"
+            options={activeClients.map((c) => ({ value: c.id, label: c.name + (c.is_active ? '' : '（無効）') }))}
+          />
         </Field>
         <Field label="契約名" req>
           <input className="input" name="name" defaultValue={record?.name ?? ''} placeholder="Webアプリ開発 等" required />
         </Field>
         <Field label="請求形態" req full>
-          <select className="select" value={bt} onChange={(e) => setBt(e.target.value as BT)}>
-            <option value="hourly">時給制</option>
-            <option value="monthly_minimum">月間最低保証</option>
-            <option value="fixed">固定報酬</option>
-          </select>
+          <CustomSelect
+            value={bt}
+            onChange={(v) => setBt(v as BT)}
+            options={[
+              { value: 'hourly', label: '時給制' },
+              { value: 'monthly_minimum', label: '月間最低保証' },
+              { value: 'fixed', label: '固定報酬' },
+            ]}
+          />
         </Field>
         {bt === 'hourly' && (
           <Field label="基本時給（円）" req>

@@ -6,6 +6,7 @@ import { createWorkLog, updateWorkLog, deleteWorkLog } from './actions'
 import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
 import { StatusChip } from '@/components/page-chrome'
+import { CustomSelect } from '@/components/custom-select'
 
 // ── Helpers ──────────────────────────────────────────────────────
 function toYMD(d: Date) {
@@ -327,11 +328,16 @@ function QuickForm({
           </div>
           <div className="field">
             <label>状態</label>
-            <select className="select" value={status} onChange={e => setStatus(e.target.value as WorkLogStatus)}>
-              <option value="planned">予定</option>
-              <option value="worked">稼働済</option>
-              <option value="billed">請求済</option>
-            </select>
+            <CustomSelect
+              name="status"
+              value={status}
+              onChange={(v) => setStatus(v as WorkLogStatus)}
+              options={[
+                { value: 'planned', label: '予定' },
+                { value: 'worked', label: '稼働済' },
+                { value: 'billed', label: '請求済' },
+              ]}
+            />
           </div>
           <div className="field" style={{ gridColumn: '1 / -1' }}>
             <label>メモ（任意）</label>
