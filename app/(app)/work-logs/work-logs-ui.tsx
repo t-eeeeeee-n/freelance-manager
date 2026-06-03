@@ -101,23 +101,17 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
       {/* ── Tab content ── */}
       {activeContract && (
         <>
-          {/* 記録ボタン（パネルが閉じているときのみ） */}
-          {!showForm && !editingLog && (
-            <div style={{ marginBottom: 16 }}>
-              <button className="btn btn--primary" onClick={() => setShowForm(true)}>
-                <Icon name="plus" size={16} />稼働を記録
-              </button>
-            </div>
-          )}
-
-          {/* テーブル ＋ 右パネル */}
-          <div className="wl-layout">
-            {/* History table */}
-            <div className="wl-main">
-            <div className="tablecard">
+          {/* テーブルヘッダー + 記録ボタン（右寄せ） */}
+          <div className="tablecard">
             <div className="tablecard__head">
               <h2>稼働履歴</h2>
               <span className="count">{contractLogs.length}件</span>
+              <span className="spacer" />
+              {!showForm && !editingLog && (
+                <button className="btn btn--primary btn--sm" onClick={() => setShowForm(true)}>
+                  <Icon name="plus" size={14} />稼働を記録
+                </button>
+              )}
             </div>
             <div className="tablewrap">
               <table className="tbl">
@@ -176,29 +170,25 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
                 </tbody>
               </table>
             </div>
-            </div>
-            </div>
+          </div>
 
-            {/* 右パネル：スライドイン */}
-            <div className="wl-panel" data-open={String(showForm || !!editingLog)}>
-              <div className="wl-panel-inner">
-                {(showForm || editingLog) && (
-                  <QuickForm
-                    key={editingLog ? 'edit-' + editingLog.id : activeContractId}
-                    contractId={editingLog?.contract_id ?? activeContractId}
-                    clientId={editingLog?.client_id ?? activeContract.client_id}
-                    contractName={activeContract.name}
-                    clientName={clientMap[activeContract.client_id] ?? ''}
-                    initialDate={editingLog?.work_date}
-                    existing={editingLog ?? undefined}
-                    onSave={editingLog
-                      ? (fd) => handleUpdate(editingLog.id, fd)
-                      : handleSave}
-                    onCancel={() => { setShowForm(false); setEditingLog(null) }}
-                  />
-                )}
-              </div>
-            </div>
+          {/* 右端スライドインパネル（fixed、テーブルに重ねる） */}
+          <div className="wl-panel-fixed" data-open={String(showForm || !!editingLog)}>
+            {(showForm || editingLog) && (
+              <QuickForm
+                key={editingLog ? 'edit-' + editingLog.id : activeContractId}
+                contractId={editingLog?.contract_id ?? activeContractId}
+                clientId={editingLog?.client_id ?? activeContract.client_id}
+                contractName={activeContract.name}
+                clientName={clientMap[activeContract.client_id] ?? ''}
+                initialDate={editingLog?.work_date}
+                existing={editingLog ?? undefined}
+                onSave={editingLog
+                  ? (fd) => handleUpdate(editingLog.id, fd)
+                  : handleSave}
+                onCancel={() => { setShowForm(false); setEditingLog(null) }}
+              />
+            )}
           </div>
         </>
       )}
