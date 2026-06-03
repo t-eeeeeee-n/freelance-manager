@@ -259,12 +259,15 @@ function QuickForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ padding: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-          <div className="field" style={{ width: 175, flexShrink: 0 }}>
-            <label>日付</label>
-            <CustomDatePicker value={date} onChange={setDate} required />
-          </div>
+    <form onSubmit={handleSubmit} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* 行1: 日付 */}
+        <div className="field">
+          <label>日付</label>
+          <CustomDatePicker value={date} onChange={setDate} required />
+        </div>
+
+        {/* 行2: 開始・終了・休憩・状態・実働 */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
           <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>開始時刻</label>
             <CustomTimePicker value={startTime} onChange={setStartTime} placeholder="--:--" name="actual_start_time" />
@@ -278,7 +281,7 @@ function QuickForm({
             <input className="input num" type="number" value={breakMins}
               onChange={e => setBreakMins(Number(e.target.value))} min="0" step="15" placeholder="0" />
           </div>
-          <div className="field" style={{ width: 130, flexShrink: 0 }}>
+          <div className="field" style={{ width: 120, flexShrink: 0 }}>
             <label>状態</label>
             <CustomSelect name="status" value={status} onChange={v => setStatus(v as WorkLogStatus)}
               options={[
@@ -291,10 +294,12 @@ function QuickForm({
             {previewHours != null ? `実働 ${previewHours}h` : ''}
           </div>
         </div>
-        <div className="field" style={{ marginBottom: 12 }}>
+        {/* 行3: メモ */}
+        <div className="field">
           <label>メモ（任意）</label>
           <input className="input" value={memo} onChange={e => setMemo(e.target.value)} placeholder="作業内容など" />
         </div>
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button type="button" className="btn btn--ghost" onClick={onCancel}>キャンセル</button>
           <button type="submit" className="btn btn--primary" disabled={busy || !startTime || !endTime}>
