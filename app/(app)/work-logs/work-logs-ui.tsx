@@ -36,15 +36,15 @@ function calcHours(start: string, end: string, breakMins: number) {
 export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; contracts: Contract[]; clients: Client[] }) {
   const toast = useToast()
   const router = useRouter()
-  const [date, setDate] = React.useState(toYMD(new Date()))
+  const today = toYMD(new Date())
   const [selectedContractId, setSelectedContractId] = React.useState<string | null>(null)
   const [editingLog, setEditingLog] = React.useState<WorkLog | null>(null)
 
   const clientMap = Object.fromEntries(clients.map(c => [c.id, c.name]))
   const contractMap = Object.fromEntries(contracts.map(c => [c.id, c.name]))
 
-  // logs for selected date
-  const todayLogs = logs.filter(l => l.work_date === date)
+  // 今日分のみカードの済バッジ表示に使う
+  const todayLogs = logs.filter(l => l.work_date === today)
   const loggedContractIds = new Set(todayLogs.map(l => l.contract_id))
 
   const handleCardClick = (contractId: string) => {
@@ -86,24 +86,9 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
 
   return (
     <>
-      {/* ── Date selector ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 'var(--gap)' }}>
-        <h1 style={{ fontSize: 'var(--h1)', fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>稼働ログ</h1>
-        <span className="spacer" />
-        <div className="ymselect">
-          <button className="nav" onClick={() => { setDate(shiftDay(date, -1)); setSelectedContractId(null) }}>
-            <Icon name="chevL" size={16} />
-          </button>
-          <span className="cur num" style={{ minWidth: 160, fontSize: 'var(--base)', fontWeight: 700 }}>{dateLabel(date)}</span>
-          <button className="nav" onClick={() => { setDate(shiftDay(date, 1)); setSelectedContractId(null) }}>
-            <Icon name="chevR" size={16} />
-          </button>
-        </div>
-        <button className="btn btn--ghost btn--sm" onClick={() => { setDate(toYMD(new Date())); setSelectedContractId(null) }}>今日</button>
+      <div className="pagehead">
+        <div><h1>稼働ログ</h1><p>契約を選んで稼働を記録</p></div>
       </div>
-
-      {/* ── Contract cards ── */}
-      <p style={{ fontSize: 'var(--small)', color: 'var(--text-faint)', marginBottom: 12 }}>契約を選んで稼働を記録</p>
       <div className="quick" style={{ marginBottom: 'var(--gap)' }}>
         {contracts.map(c => {
           const isLogged = loggedContractIds.has(c.id)
@@ -148,12 +133,11 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
       {/* ── Inline quick form (create) ── */}
       {selectedContractId && !editingLog && selectedContract && (
         <QuickForm
-          key={selectedContractId + date}
+          key={selectedContractId}
           contractId={selectedContractId}
           clientId={selectedContract.client_id}
           contractName={contractMap[selectedContractId] ?? ''}
           clientName={clientMap[selectedContract.client_id] ?? ''}
-          date={date}
           onSave={handleSave}
           onCancel={() => setSelectedContractId(null)}
         />
@@ -167,7 +151,7 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
           clientId={editingLog.client_id}
           contractName={contractMap[editingLog.contract_id] ?? ''}
           clientName={clientMap[editingLog.client_id] ?? ''}
-          date={editingLog.work_date}
+          initialDate={editingLog.work_date}
           existing={editingLog}
           onSave={(fd) => handleUpdate(editingLog.id, fd)}
           onCancel={() => setEditingLog(null)}
@@ -247,17 +231,18 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
 
 // ── Quick inline form ─────────────────────────────────────────────
 function QuickForm({
-  contractId, clientId, contractName, clientName, date, existing, onSave, onCancel,
+  contractId, clientId, contractName, clientName, initialDate, existing, onSave, onCancel,
 }: {
   contractId: string
   clientId: string
   contractName: string
   clientName: string
-  date: string
+  initialDate?: string
   existing?: WorkLog
   onSave: (fd: FormData) => Promise<void>
   onCancel: () => void
 }) {
+  const [date, setDate] = React.useState(existing?.work_date ?? initialDate ?? toYMD(new Date()))
   const [startTime, setStartTime] = React.useState(existing?.actual_start_time?.slice(0, 5) ?? '')
   const [endTime, setEndTime] = React.useState(existing?.actual_end_time?.slice(0, 5) ?? '')
   const [breakMins, setBreakMins] = React.useState(existing?.break_minutes ?? 0)
@@ -302,8 +287,12 @@ function QuickForm({
         <span style={{ fontSize: 'var(--small)', color: 'var(--accent-text)', opacity: 0.75 }}>{clientName}</span>
       </div>
       <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)' }}>
-        {/* 1行目：開始 - 終了 Xh 休憩 状態 */}
+        {/* 日付 + 時刻 + 実働 + 休憩 + 状態 */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div className="field" style={{ width: 140, flexShrink: 0 }}>
+            <label>日付</label>
+            <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} required />
+          </div>
           <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>開始時刻</label>
             <CustomTimePicker value={startTime} onChange={setStartTime} placeholder="--:--" name="actual_start_time" />
