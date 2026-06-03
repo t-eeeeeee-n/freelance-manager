@@ -10,7 +10,9 @@ const contract = (over: Partial<Contract>): Contract => ({
 
 const log = (over: Partial<WorkLog>): WorkLog => ({
   id: 'w1', client_id: 'cl1', contract_id: 'c1', work_date: '2026-06-10',
-  planned_hours: null, actual_hours: 10, memo: null, status: 'worked', ...over,
+  planned_hours: null, actual_hours: 10,
+  actual_start_time: null, actual_end_time: null, break_minutes: 0,
+  memo: null, status: 'worked', ...over,
 })
 
 describe('buildMonthlySummary', () => {
