@@ -275,12 +275,12 @@ tr:hover .rowactions { opacity: 1; }
 .rail__toggle {
   position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
   width: 24px; height: 24px; border-radius: 50%;
-  background: var(--surface); border: 1px solid var(--border-strong);
-  cursor: pointer; display: grid; place-items: center; color: var(--text-faint);
-  z-index: 10; transition: background 0.14s, color 0.14s;
-  box-shadow: 0 1px 4px oklch(0 0 0 / 0.1);
+  background: var(--accent); border: 1px solid var(--accent-hover);
+  cursor: pointer; display: grid; place-items: center; color: var(--accent-contrast);
+  z-index: 10; transition: background 0.14s;
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.15);
 }
-.rail__toggle:hover { background: var(--surface-2); color: var(--text); }
+.rail__toggle:hover { background: var(--accent-hover); }
 
 /* ── Shell: topstrip ── */
 .topstrip { height: 62px; flex: 0 0 auto; display: flex; align-items: center; padding: 0 clamp(20px,3.5vw,40px); border-bottom: 1px solid var(--border); background: var(--surface); gap: 12px; }
