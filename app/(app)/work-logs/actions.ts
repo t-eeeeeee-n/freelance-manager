@@ -24,8 +24,9 @@ export async function createWorkLog(formData: FormData) {
   if (actual_start_time && actual_end_time) {
     const [sh, sm] = actual_start_time.split(':').map(Number)
     const [eh, em] = actual_end_time.split(':').map(Number)
-    const totalMins = (eh * 60 + em) - (sh * 60 + sm) - break_minutes
-    computedHours = Math.round(totalMins / 6) / 10  // round to 1 decimal
+    let totalMins = (eh * 60 + em) - (sh * 60 + sm) - break_minutes
+    if (totalMins <= 0) totalMins += 24 * 60  // 日またぎ
+    computedHours = Math.round(totalMins / 6) / 10
   }
 
   const status = String(formData.get('status') ?? 'planned') as WorkLogStatus
@@ -55,8 +56,9 @@ export async function updateWorkLog(id: string, formData: FormData) {
   if (actual_start_time && actual_end_time) {
     const [sh, sm] = actual_start_time.split(':').map(Number)
     const [eh, em] = actual_end_time.split(':').map(Number)
-    const totalMins = (eh * 60 + em) - (sh * 60 + sm) - break_minutes
-    computedHours = Math.round(totalMins / 6) / 10  // round to 1 decimal
+    let totalMins = (eh * 60 + em) - (sh * 60 + sm) - break_minutes
+    if (totalMins <= 0) totalMins += 24 * 60  // 日またぎ
+    computedHours = Math.round(totalMins / 6) / 10
   }
 
   const status = String(formData.get('status') ?? 'planned') as WorkLogStatus

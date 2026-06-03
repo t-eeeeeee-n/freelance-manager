@@ -26,7 +26,8 @@ function dateLabel(ymd: string) {
 function calcHours(start: string, end: string, breakMins: number) {
   const [sh, sm] = start.split(':').map(Number)
   const [eh, em] = end.split(':').map(Number)
-  const total = (eh * 60 + em) - (sh * 60 + sm) - breakMins
+  let total = (eh * 60 + em) - (sh * 60 + sm) - breakMins
+  if (total <= 0) total += 24 * 60  // 日またぎ
   if (total <= 0) return null
   return Math.round(total / 6) / 10
 }
