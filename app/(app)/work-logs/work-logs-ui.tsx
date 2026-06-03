@@ -302,36 +302,20 @@ function QuickForm({
         <span style={{ fontSize: 'var(--small)', color: 'var(--accent-text)', opacity: 0.75 }}>{clientName}</span>
       </div>
       <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)' }}>
-        <style>{`@keyframes hoursAppear{from{opacity:0;transform:scale(0.8) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
-
-        {/* 時刻行：開始 → 終了 → 実働ピル（常にスペース確保してズレ防止） */}
+        {/* 1行目：開始 - 終了 Xh 休憩 状態 */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>開始時刻</label>
             <CustomTimePicker value={startTime} onChange={setStartTime} placeholder="--:--" name="actual_start_time" />
           </div>
-          <span style={{ paddingBottom: 10, color: 'var(--text-faint)', fontSize: 16, lineHeight: 1, flexShrink: 0 }}>→</span>
+          <span style={{ paddingBottom: 10, color: 'var(--text-faint)', flexShrink: 0 }}>-</span>
           <div className="field" style={{ width: 118, flexShrink: 0 }}>
             <label>終了時刻</label>
             <CustomTimePicker value={endTime} onChange={setEndTime} placeholder="--:--" name="actual_end_time" />
           </div>
-          {/* 常に同じ幅を確保 → ピル表示でもフィールドがズレない */}
-          <div style={{ width: 84, paddingBottom: 6, flexShrink: 0 }}>
-            {previewHours != null && (
-              <div style={{
-                animation: 'hoursAppear 0.22s cubic-bezier(0.2,0.8,0.3,1) both',
-                display: 'inline-flex', alignItems: 'baseline', gap: 2,
-                background: 'var(--accent-soft)', color: 'var(--accent-text)',
-                borderRadius: 999, padding: '6px 12px', fontWeight: 700, whiteSpace: 'nowrap',
-              }}>
-                <span className="num" style={{ fontSize: 'var(--h2)', fontWeight: 800, lineHeight: 1 }}>{previewHours}</span>
-                <span style={{ fontSize: 'var(--small)' }}>h</span>
-              </div>
-            )}
+          <div style={{ paddingBottom: 10, width: 48, flexShrink: 0, fontSize: 'var(--small)', color: 'var(--text-faint)' }}>
+            {previewHours != null ? `${previewHours}h` : ''}
           </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
           <div className="field" style={{ width: 90, flexShrink: 0 }}>
             <label>休憩（分）</label>
             <input
@@ -357,10 +341,12 @@ function QuickForm({
               ]}
             />
           </div>
-          <div className="field" style={{ flex: 1, minWidth: 160 }}>
-            <label>メモ（任意）</label>
-            <input className="input" value={memo} onChange={e => setMemo(e.target.value)} placeholder="作業内容など" />
-          </div>
+        </div>
+
+        {/* 2行目：メモ */}
+        <div className="field" style={{ marginBottom: 12 }}>
+          <label>メモ（任意）</label>
+          <input className="input" value={memo} onChange={e => setMemo(e.target.value)} placeholder="作業内容など" />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
