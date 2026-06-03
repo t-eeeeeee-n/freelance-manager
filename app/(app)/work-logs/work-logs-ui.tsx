@@ -172,15 +172,39 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
             </div>
           </div>
 
-          {/* 右端スライドインパネル（fixed、テーブルに重ねる） */}
+          {/* パネル外クリックでスライドアウト */}
+          {(showForm || !!editingLog) && (
+            <div
+              style={{ position: 'fixed', inset: 0, zIndex: 39 }}
+              onClick={() => { setShowForm(false); setEditingLog(null) }}
+            />
+          )}
+
+          {/* 右端スライドインパネル */}
           <div className="wl-panel-fixed" data-open={String(showForm || !!editingLog)}>
+            {/* パネルヘッダー：タイトル＋×ボタン */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '16px 20px', borderBottom: '1px solid var(--border)',
+              position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1,
+            }}>
+              <span style={{ fontWeight: 700, fontSize: 'var(--h2)' }}>
+                {editingLog ? '稼働を編集' : '稼働を記録'}
+              </span>
+              <button
+                className="btn btn--icon btn--subtle"
+                onClick={() => { setShowForm(false); setEditingLog(null) }}
+                aria-label="閉じる"
+              >
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+
             {(showForm || editingLog) && (
               <QuickForm
                 key={editingLog ? 'edit-' + editingLog.id : activeContractId}
                 contractId={editingLog?.contract_id ?? activeContractId}
                 clientId={editingLog?.client_id ?? activeContract.client_id}
-                contractName={activeContract.name}
-                clientName={clientMap[activeContract.client_id] ?? ''}
                 initialDate={editingLog?.work_date}
                 existing={editingLog ?? undefined}
                 onSave={editingLog
@@ -198,9 +222,9 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
 
 // ── Quick inline form ─────────────────────────────────────────────
 function QuickForm({
-  contractId, clientId, contractName, clientName, initialDate, existing, onSave, onCancel,
+  contractId, clientId, initialDate, existing, onSave, onCancel,
 }: {
-  contractId: string; clientId: string; contractName: string; clientName: string
+  contractId: string; clientId: string
   initialDate?: string; existing?: WorkLog
   onSave: (fd: FormData) => Promise<void>; onCancel: () => void
 }) {
@@ -235,16 +259,7 @@ function QuickForm({
   }
 
   return (
-    <div className="card">
-      <div style={{
-        padding: '12px var(--pad)', borderBottom: '1px solid var(--border)',
-        display: 'flex', alignItems: 'center', gap: 10, background: 'var(--accent-soft)',
-      }}>
-        <Icon name="clock" size={15} style={{ color: 'var(--accent-text)' }} />
-        <span style={{ fontWeight: 700, color: 'var(--accent-text)', fontSize: 'var(--small)' }}>{contractName}</span>
-        <span style={{ fontSize: 'var(--small)', color: 'var(--accent-text)', opacity: 0.7 }}>{clientName}</span>
-      </div>
-      <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)' }}>
+    <form onSubmit={handleSubmit} style={{ padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <div className="field" style={{ width: 175, flexShrink: 0 }}>
             <label>日付</label>
@@ -286,7 +301,6 @@ function QuickForm({
             {busy ? '保存中…' : existing ? '更新する' : '記録する'}
           </button>
         </div>
-      </form>
-    </div>
+    </form>
   )
 }
