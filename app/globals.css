@@ -351,3 +351,13 @@ tr:hover .rowactions { opacity: 1; }
 }
 .ctab:hover { color: var(--text); background: var(--surface-2); }
 .ctab[data-active="true"] { color: var(--accent-text); border-bottom-color: var(--accent); background: var(--accent-soft); }
+
+/* ── Work log split layout ── */
+.wl-layout { display: flex; align-items: flex-start; gap: 0; }
+.wl-main { flex: 1; min-width: 0; }
+.wl-panel {
+  width: 0; overflow: hidden; flex-shrink: 0;
+  transition: width 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.wl-panel[data-open="true"] { width: 380px; padding-left: 16px; }
+.wl-panel-inner { width: 364px; } /* fixed — prevents wrapping during transition */
