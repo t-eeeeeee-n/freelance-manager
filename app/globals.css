@@ -298,3 +298,44 @@ tr:hover .rowactions { opacity: 1; }
   .mobnav button[data-active="true"] { color: var(--accent-text); }
   .appmain > .scroll { padding-bottom: 64px; }
 }
+
+/* ── Custom Select / Time Picker ── */
+.csel { position: relative; width: 100%; }
+.csel__trigger {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-family: var(--font-sans); font-size: var(--base); color: var(--text);
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); padding: 9px 11px; cursor: pointer;
+  transition: border-color 0.14s, box-shadow 0.14s; text-align: left; line-height: 1.5;
+}
+.csel__trigger:hover:not([disabled]) { border-color: var(--accent); }
+.csel__trigger[data-open="true"] { border-color: var(--accent); box-shadow: var(--ring); }
+.csel__trigger[disabled] { opacity: 0.45; cursor: not-allowed; }
+.csel__val { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.csel__placeholder { color: var(--text-faint); }
+.csel__chevron { flex: 0 0 auto; color: var(--text-faint); transition: transform 0.2s cubic-bezier(0.4,0,0.2,1); }
+.csel__trigger[data-open="true"] .csel__chevron { transform: rotate(180deg); }
+.csel__list {
+  position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 100;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-pop); overflow: hidden; max-height: 260px; overflow-y: auto;
+  animation: cselOpen 0.15s cubic-bezier(0.2,0.8,0.3,1) both;
+  transform-origin: top center;
+}
+.csel__list::-webkit-scrollbar { width: 6px; }
+.csel__list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+@keyframes cselOpen {
+  from { opacity: 0; transform: translateY(-6px) scaleY(0.94); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+.csel__opt {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 12px; font-family: var(--font-sans); font-size: var(--base);
+  color: var(--text); background: transparent; border: 0; cursor: pointer; text-align: left;
+  transition: background 0.1s;
+}
+.csel__opt:hover { background: var(--surface-2); }
+.csel__opt[data-selected="true"] { color: var(--accent-text); background: var(--accent-soft); font-weight: 600; }
+.csel__opt:focus-visible { outline: none; background: var(--accent-soft); }
+.csel__check { opacity: 0; flex: 0 0 auto; }
+.csel__opt[data-selected="true"] .csel__check { opacity: 1; }

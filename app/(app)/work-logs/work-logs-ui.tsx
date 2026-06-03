@@ -7,6 +7,7 @@ import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
 import { StatusChip } from '@/components/page-chrome'
 import { CustomSelect } from '@/components/custom-select'
+import { CustomTimePicker } from '@/components/custom-time-picker'
 
 // ── Helpers ──────────────────────────────────────────────────────
 function toYMD(d: Date) {
@@ -308,11 +309,11 @@ function QuickForm({
         }}>
           <div className="field">
             <label>開始時刻</label>
-            <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} autoFocus />
+            <CustomTimePicker value={startTime} onChange={setStartTime} placeholder="--:--" name="actual_start_time" />
           </div>
           <div className="field">
             <label>終了時刻</label>
-            <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+            <CustomTimePicker value={endTime} onChange={setEndTime} placeholder="--:--" name="actual_end_time" />
           </div>
           <div className="field">
             <label>休憩（分）</label>
