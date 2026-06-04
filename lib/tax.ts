@@ -77,7 +77,6 @@ export function calculateTax(input: TaxInput): TaxResult {
   const businessIncome = Math.max(annualRevenue - annualExpense - blue, 0)
 
   if (businessIncome === 0) {
-    const netIncome = annualRevenue - annualExpense
     return {
       businessIncome: 0,
       nationalPension: 0,
@@ -88,8 +87,7 @@ export function calculateTax(input: TaxInput): TaxResult {
       taxableIncomeResident: 0,
       residentTax: 0,
       totalTaxAndInsurance: 0,
-      netIncome,
-      reserve: buildReserve(0, netIncome, annualRevenue),
+      netIncome: annualRevenue - annualExpense,
     }
   }
 
@@ -121,14 +119,5 @@ export function calculateTax(input: TaxInput): TaxResult {
     residentTax,
     totalTaxAndInsurance,
     netIncome,
-    reserve: buildReserve(totalTaxAndInsurance, netIncome, annualRevenue),
-  }
-}
-
-function buildReserve(totalTaxAndInsurance: number, netIncome: number, annualRevenue: number) {
-  return {
-    monthlyReserve: Math.round(totalTaxAndInsurance / 12),
-    reserveRate: annualRevenue > 0 ? totalTaxAndInsurance / annualRevenue : 0,
-    monthlyDisposable: Math.round(netIncome / 12),
   }
 }
