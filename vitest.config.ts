@@ -4,6 +4,6 @@ import path from 'node:path'
 
 export default defineConfig({
   plugins: [react()],
-  test: { environment: 'node', include: ['lib/**/*.test.ts'] },
+  test: { environment: 'node', include: ['lib/**/*.test.{ts,tsx}'] },
   resolve: { alias: { '@': path.resolve(__dirname, '.') } },
 })

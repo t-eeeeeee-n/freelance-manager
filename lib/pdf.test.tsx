@@ -1,0 +1,26 @@
+import { describe, it, expect } from 'vitest'
+import { renderInvoicePdf } from './pdf'
+
+describe('renderInvoicePdf', () => {
+  it('generates a valid PDF with Japanese text', async () => {
+    const bytes = await renderInvoicePdf({
+      invoiceNo: '2026-06-001',
+      issueDate: '2026-06-30',
+      yearMonth: '2026-06',
+      clientName: 'テスト株式会社',
+      rows: [{
+        clientId: 'c1', contractId: 'ct1', contractName: 'Webアプリ開発',
+        billingType: 'hourly', workedHours: 80, minimumHours: null,
+        billableHours: 80, baseRate: 5000, overtimeRate: null, amount: 400000,
+      }],
+      totalAmount: 400000,
+      profile: {
+        display_name: '山田 太郎', address: '東京都', email: 'test@example.com',
+        phone: '090-0000-0000', bank_info: '〇〇銀行 普通 1234567',
+      },
+    })
+    expect(bytes.length).toBeGreaterThan(1000)
+    // PDF magic bytes: %PDF
+    expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('%PDF')
+  }, 30000)
+})
