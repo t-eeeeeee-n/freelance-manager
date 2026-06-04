@@ -12,6 +12,7 @@ const NAV = [
   { href: '/work-logs', label: '稼働ログ', icon: 'clock' },
   { href: '/expenses', label: '経費', icon: 'wallet' },
   { href: '/summary', label: '月次サマリー', icon: 'chart' },
+  { href: '/tax', label: '年間手取り試算', icon: 'calc' },
   { href: '/invoices', label: '請求書履歴', icon: 'copy' },
   { href: '/settings/profile', label: '設定', icon: 'edit' },
 ]

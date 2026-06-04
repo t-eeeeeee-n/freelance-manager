@@ -18,6 +18,7 @@ const I: Record<string, string> = {
   moon: "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z",
   copy: "M9 9h10v10H9z M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
   search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16 M21 21l-4-4",
+  calc: "M6 2h12v20H6z M9 6h6 M9 11h1 M13 11h1 M9 15h1 M13 15h1 M9 19h1 M13 19h1",
 }
 
 export function Icon({ name, size = 18, style }: { name: string; size?: number; style?: React.CSSProperties }) {
