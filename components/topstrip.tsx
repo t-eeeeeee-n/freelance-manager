@@ -10,6 +10,8 @@ const LABELS: Record<string, string> = {
   '/work-logs': '稼働ログ',
   '/expenses': '経費',
   '/summary': '月次サマリー',
+  '/invoices': '請求書履歴',
+  '/settings/profile': '設定',
 }
 const DESCS: Record<string, string> = {
   '/dashboard': '今月の概況',
@@ -18,6 +20,8 @@ const DESCS: Record<string, string> = {
   '/work-logs': '日々の稼働記録',
   '/expenses': '経費と按分の管理',
   '/summary': '月次の請求集計',
+  '/invoices': '発行済み請求書の一覧',
+  '/settings/profile': '請求書の発行者情報',
 }
 
 export function Topstrip() {
