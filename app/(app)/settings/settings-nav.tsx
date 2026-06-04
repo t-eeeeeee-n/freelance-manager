@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 const TABS = [
   { href: '/settings/profile', label: 'プロフィール' },
   { href: '/settings/appearance', label: '外観' },
+  { href: '/settings/tax', label: '税試算' },
 ]
 
 export function SettingsNav() {
