@@ -10,14 +10,17 @@ interface Props {
   projectedRevenue: number
   annualExpense: number
   params: TaxParams
+  withholdingActual: number
+  withholdingProjected: number
 }
 
 const yen = (n: number) => Math.round(n).toLocaleString('ja-JP')
 
-export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, params }: Props) {
+export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, params, withholdingActual, withholdingProjected }: Props) {
   // what-if 用の一時上書き（保存しない）
   const [basis, setBasis] = React.useState<'actual' | 'projected'>('projected')
   const basisRevenue = basis === 'projected' ? projectedRevenue : actualRevenue
+  const basisWithholding = basis === 'projected' ? withholdingProjected : withholdingActual
   const [revenue, setRevenue] = React.useState(basisRevenue)
   const [expense, setExpense] = React.useState(annualExpense)
   const [filingType, setFilingType] = React.useState(params.filingType)
@@ -32,9 +35,10 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
     () => calculateTax({
       annualRevenue: revenue,
       annualExpense: expense,
+      annualWithholding: basisWithholding,
       params: { ...params, filingType, otherDeductions },
     }),
-    [revenue, expense, filingType, otherDeductions, params],
+    [revenue, expense, filingType, otherDeductions, params, basisWithholding],
   )
 
   const dirty = revenue !== basisRevenue || expense !== annualExpense
@@ -48,6 +52,7 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
     ['所得税（復興税込み）', result.incomeTax],
     ['課税所得（住民税）', result.taxableIncomeResident],
     ['住民税', result.residentTax],
+    ['源泉徴収（前払い所得税）', result.withholding],
   ]
 
   return (
@@ -119,6 +124,14 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
                 <td style={{ fontWeight: 700 }}>税・保険合計</td>
                 <td className="ar num yen" style={{ fontWeight: 800 }}>{yen(result.totalTaxAndInsurance)}</td>
               </tr>
+              {result.withholding > 0 && (
+                <tr>
+                  <td style={{ fontWeight: 600 }}>{result.incomeTaxRefund > 0 ? '還付見込み' : '確定申告での追加納付'}</td>
+                  <td className="ar num yen" style={{ fontWeight: 700, color: result.incomeTaxRefund > 0 ? 'var(--ok, #16a34a)' : 'inherit' }}>
+                    {result.incomeTaxRefund > 0 ? yen(result.incomeTaxRefund) : yen(result.incomeTaxDue)}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -134,7 +147,7 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
         <div className="card totalcard">
           <span className="lbl">毎月の取り置き目安</span>
           <span className="big num yen">{yen(result.reserve.monthlyReserve)}</span>
-          <span className="sub">税・保険用に毎月確保（売上の約{Math.round(result.reserve.reserveRate * 100)}%）</span>
+          <span className="sub">税・保険用に毎月確保（源泉控除後・売上の約{Math.round(result.reserve.reserveRate * 100)}%）</span>
         </div>
         <div className="card totalcard">
           <span className="lbl">月に使っていい手取り</span>
