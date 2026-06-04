@@ -293,6 +293,29 @@ tr:hover .rowactions { opacity: 1; }
 .themebtn:hover { background: var(--surface-2); color: var(--text); }
 .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--text-dim); flex: 0 0 auto; }
 
+/* ── Avatar menu ── */
+.avmenu { position: relative; }
+.avmenu__btn {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text-dim); cursor: pointer;
+  display: grid; place-items: center; transition: all 0.14s;
+}
+.avmenu__btn:hover { background: var(--surface-2); color: var(--text); }
+.avmenu__list {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 100; min-width: 180px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-pop); overflow: hidden; padding: 4px;
+  animation: cselOpen 0.15s cubic-bezier(0.2,0.8,0.3,1) both;
+}
+.avmenu__item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border: 0; background: transparent; cursor: pointer;
+  font-family: var(--font-sans); font-size: var(--small); font-weight: 600;
+  color: var(--text-dim); border-radius: var(--radius-sm); text-decoration: none;
+  transition: background 0.1s;
+}
+.avmenu__item:hover { background: var(--surface-2); color: var(--text); }
+
 /* ── App layout ── */
 .appwin { display: flex; height: 100dvh; overflow: hidden; background: var(--bg); }
 .appmain { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
