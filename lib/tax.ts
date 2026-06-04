@@ -30,6 +30,11 @@ export interface TaxResult {
   residentTax: number               // 住民税
   totalTaxAndInsurance: number      // 税・保険合計
   netIncome: number                 // 手取り（年・可処分）
+  reserve: {
+    monthlyReserve: number     // 毎月の取り置き目安（税・保険合計 ÷ 12）
+    reserveRate: number        // 取り置き率（税・保険合計 ÷ 売上、0〜1）
+    monthlyDisposable: number  // 月に使っていい手取り（手取り ÷ 12）
+  }
 }
 
 // スペック §4.7 のデフォルト値と一致させる
@@ -77,6 +82,7 @@ export function calculateTax(input: TaxInput): TaxResult {
   const businessIncome = Math.max(annualRevenue - annualExpense - blue, 0)
 
   if (businessIncome === 0) {
+    const netIncome = annualRevenue - annualExpense
     return {
       businessIncome: 0,
       nationalPension: 0,
@@ -87,7 +93,8 @@ export function calculateTax(input: TaxInput): TaxResult {
       taxableIncomeResident: 0,
       residentTax: 0,
       totalTaxAndInsurance: 0,
-      netIncome: annualRevenue - annualExpense,
+      netIncome,
+      reserve: buildReserve(0, netIncome, annualRevenue),
     }
   }
 
@@ -119,5 +126,14 @@ export function calculateTax(input: TaxInput): TaxResult {
     residentTax,
     totalTaxAndInsurance,
     netIncome,
+    reserve: buildReserve(totalTaxAndInsurance, netIncome, annualRevenue),
+  }
+}
+
+function buildReserve(totalTaxAndInsurance: number, netIncome: number, annualRevenue: number) {
+  return {
+    monthlyReserve: Math.round(totalTaxAndInsurance / 12),
+    reserveRate: annualRevenue > 0 ? totalTaxAndInsurance / annualRevenue : 0,
+    monthlyDisposable: Math.round(netIncome / 12),
   }
 }

@@ -69,4 +69,18 @@ describe('calculateTax', () => {
     expect(ideco.taxableIncomeIncomeTax).toBeLessThan(base.taxableIncomeIncomeTax)
     expect(ideco.incomeTax).toBeLessThan(base.incomeTax)
   })
+
+  it('取り置き目安: 月額・率・月の可処分を導出', () => {
+    const r = calculateTax({ annualRevenue: 6_000_000, annualExpense: 1_000_000, params: DEFAULT_TAX_PARAMS })
+    expect(r.reserve.monthlyReserve).toBe(103_528)
+    expect(r.reserve.monthlyDisposable).toBe(313_139)
+    expect(r.reserve.reserveRate).toBeCloseTo(1_242_333 / 6_000_000, 5)
+  })
+
+  it('取り置き目安: 売上0でも0除算せず率0', () => {
+    const r = calculateTax({ annualRevenue: 0, annualExpense: 0, params: DEFAULT_TAX_PARAMS })
+    expect(r.reserve.monthlyReserve).toBe(0)
+    expect(r.reserve.reserveRate).toBe(0)
+    expect(r.reserve.monthlyDisposable).toBe(0)
+  })
 })
