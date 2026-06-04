@@ -33,3 +33,12 @@ export async function updateDueDate(id: string, dueDate: string) {
   revalidatePath('/dashboard')
   return { error: null }
 }
+
+export async function deleteInvoice(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('invoices').delete().eq('id', id)
+  if (error) return { error: '削除に失敗しました' }
+  revalidatePath('/invoices')
+  revalidatePath('/dashboard')
+  return { error: null }
+}

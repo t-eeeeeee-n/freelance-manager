@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { useToast } from '@/components/toast'
-import { markPaid, markUnpaid, updateDueDate } from './payment-actions'
+import { markPaid, markUnpaid, updateDueDate, deleteInvoice } from './payment-actions'
 
 export interface InvoiceRow {
   id: string
@@ -23,6 +23,15 @@ const today = () => new Date().toISOString().slice(0, 10)
 export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
   const toast = useToast()
   const [busy, setBusy] = React.useState<string | null>(null)
+  const [confirming, setConfirming] = React.useState<string | null>(null)
+
+  const del = async (inv: InvoiceRow) => {
+    setBusy(inv.id)
+    const res = await deleteInvoice(inv.id)
+    setBusy(null); setConfirming(null)
+    if (res.error) toast(res.error, 'err')
+    else toast(`請求書 ${inv.invoice_no} を削除しました`)
+  }
 
   const toggle = async (inv: InvoiceRow) => {
     setBusy(inv.id)
@@ -45,7 +54,7 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
           <thead><tr>
             <th>請求番号</th><th>クライアント</th><th>対象月</th>
             <th className="ar">金額</th><th className="ar">源泉</th><th className="ar">差引</th>
-            <th>期日</th><th style={{ width: 110 }}>状態</th><th style={{ width: 120 }}>操作</th>
+            <th>期日</th><th style={{ width: 110 }}>状態</th><th style={{ width: 230 }}>操作</th>
           </tr></thead>
           <tbody>
             {invoices.length === 0 && (
@@ -73,9 +82,21 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
                       : <span className="chip chip--dot" style={{ color: overdue ? 'var(--warn)' : 'var(--text-dim)' }}>{overdue ? '期日超過' : '未入金'}</span>}
                   </td>
                   <td>
-                    <button className="btn btn--ghost btn--sm" disabled={busy === inv.id} onClick={() => toggle(inv)}>
-                      {busy === inv.id ? '…' : inv.status === 'paid' ? '未入金に戻す' : '入金済にする'}
-                    </button>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <button className="btn btn--ghost btn--sm" disabled={busy === inv.id} onClick={() => toggle(inv)}>
+                        {busy === inv.id ? '…' : inv.status === 'paid' ? '未入金に戻す' : '入金済にする'}
+                      </button>
+                      {confirming === inv.id ? (
+                        <>
+                          <button className="btn btn--sm" style={{ color: 'var(--warn)', borderColor: 'var(--warn)' }} disabled={busy === inv.id} onClick={() => del(inv)}>
+                            {busy === inv.id ? '…' : '削除する'}
+                          </button>
+                          <button className="btn btn--ghost btn--sm" disabled={busy === inv.id} onClick={() => setConfirming(null)}>やめる</button>
+                        </>
+                      ) : (
+                        <button className="btn btn--ghost btn--sm" style={{ color: 'var(--warn)' }} onClick={() => setConfirming(inv.id)}>削除</button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )
