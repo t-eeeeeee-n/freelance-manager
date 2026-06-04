@@ -5,6 +5,7 @@ import { useToast } from '@/components/toast'
 
 interface Profile {
   display_name: string | null
+  postal_code: string | null
   address: string | null
   email: string | null
   phone: string | null
@@ -42,7 +43,10 @@ export function ProfileUI({ profile }: { profile: Profile | null }) {
         </div>
         <div className="field">
           <label>住所</label>
-          <textarea className="textarea" name="address" defaultValue={profile?.address ?? ''} placeholder="〒000-0000 東京都…" rows={2} />
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 10 }}>
+            <input className="input num" name="postal_code" defaultValue={profile?.postal_code ?? ''} placeholder="150-0001" />
+            <input className="input" name="address" defaultValue={profile?.address ?? ''} placeholder="東京都渋谷区…" />
+          </div>
         </div>
         <div className="field">
           <label>メールアドレス</label>

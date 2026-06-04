@@ -50,7 +50,8 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
     memo,
     profile: {
       display_name: profile?.display_name ?? null,
-      address: profile?.address ?? null,
+      address: [profile?.postal_code ? `〒${profile.postal_code}` : null, profile?.address]
+        .filter(Boolean).join(' ') || null,
       email: profile?.email ?? null,
       phone: profile?.phone ?? null,
       bank_info: composeBankInfo(profile),

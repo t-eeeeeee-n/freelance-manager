@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function upsertProfile(formData: FormData) {
   const display_name = String(formData.get('display_name') ?? '').trim() || null
+  const postal_code = String(formData.get('postal_code') ?? '').trim() || null
   const address = String(formData.get('address') ?? '').trim() || null
   const email = String(formData.get('email') ?? '').trim() || null
   const phone = String(formData.get('phone') ?? '').trim() || null
@@ -19,12 +20,12 @@ export async function upsertProfile(formData: FormData) {
   const { data: existing } = await supabase.from('profile').select('id').limit(1).maybeSingle()
   if (existing) {
     const { error } = await supabase.from('profile')
-      .update({ display_name, address, email, phone, bank_name, bank_branch, account_type, account_number, account_holder, updated_at: new Date().toISOString() })
+      .update({ display_name, postal_code, address, email, phone, bank_name, bank_branch, account_type, account_number, account_holder, updated_at: new Date().toISOString() })
       .eq('id', existing.id)
     if (error) return { error: '保存に失敗しました' }
   } else {
     const { error } = await supabase.from('profile')
-      .insert({ display_name, address, email, phone, bank_name, bank_branch, account_type, account_number, account_holder })
+      .insert({ display_name, postal_code, address, email, phone, bank_name, bank_branch, account_type, account_number, account_holder })
     if (error) return { error: '保存に失敗しました' }
   }
   revalidatePath('/settings/profile')

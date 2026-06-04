@@ -6,4 +6,8 @@ alter table profile
   add column account_number text,
   add column account_holder text;
 
--- 旧 bank_info は残す（既存データ参照用）。新規保存は新5項目を使用。
+-- 住所を構造化（郵便番号＋住所）
+alter table profile
+  add column postal_code text;
+
+-- 旧 bank_info / address(自由記述のまま利用) は残す。新規保存は新項目を使用。
