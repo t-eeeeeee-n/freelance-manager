@@ -23,7 +23,8 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
   ])
 
   const summary = buildMonthlySummary(yearMonth, (contracts ?? []) as Contract[], (logs ?? []) as WorkLog[], 0)
-  const billableRows = summary.rows.filter(r => r.amount > 0 || r.workedHours > 0)
+  // 金額が発生した行のみ請求書に載せる（¥0行は除外）
+  const billableRows = summary.rows.filter(r => r.amount > 0)
   if (billableRows.length === 0) return { error: 'この月・クライアントの請求データがありません' }
   const totalAmount = billableRows.reduce((s, r) => s + r.amount, 0)
 
@@ -57,7 +58,10 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
     total_amount: totalAmount,
     memo: memo ?? null,
   })
-  if (insertError) return { error: '発行履歴の保存に失敗しました' }
+  if (insertError) {
+    console.error('invoices.insert failed', { code: insertError.code, message: insertError.message })
+    return { error: '発行履歴の保存に失敗しました。もう一度お試しください' }
+  }
 
   const base64 = Buffer.from(pdfBytes).toString('base64')
   return { error: null, base64, invoiceNo, filename: `invoice-${invoiceNo}.pdf` }
