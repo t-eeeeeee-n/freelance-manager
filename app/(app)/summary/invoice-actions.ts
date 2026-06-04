@@ -5,6 +5,13 @@ import { nextInvoiceNo } from '@/lib/invoice-number'
 import { renderInvoicePdf } from '@/lib/pdf'
 import type { Contract, WorkLog } from '@/lib/types'
 
+function composeBankInfo(p: { bank_name?: string | null; bank_branch?: string | null; account_type?: string | null; account_number?: string | null; account_holder?: string | null; bank_info?: string | null } | null): string | null {
+  if (!p) return null
+  const parts = [p.bank_name, p.bank_branch, p.account_type, p.account_number, p.account_holder].filter(Boolean)
+  if (parts.length > 0) return parts.join(' ')
+  return p.bank_info ?? null  // legacy fallback
+}
+
 export async function generateInvoicePdf(clientId: string, yearMonth: string, memo?: string) {
   if (!/^\d{4}-\d{2}$/.test(yearMonth)) return { error: '年月の形式が正しくありません' }
   const supabase = await createClient()
@@ -46,7 +53,7 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
       address: profile?.address ?? null,
       email: profile?.email ?? null,
       phone: profile?.phone ?? null,
-      bank_info: profile?.bank_info ?? null,
+      bank_info: composeBankInfo(profile),
     },
   })
 

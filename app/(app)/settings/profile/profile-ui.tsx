@@ -9,6 +9,11 @@ interface Profile {
   email: string | null
   phone: string | null
   bank_info: string | null
+  bank_name: string | null
+  bank_branch: string | null
+  account_type: string | null
+  account_number: string | null
+  account_holder: string | null
 }
 
 export function ProfileUI({ profile }: { profile: Profile | null }) {
@@ -49,7 +54,16 @@ export function ProfileUI({ profile }: { profile: Profile | null }) {
         </div>
         <div className="field">
           <label>振込先</label>
-          <textarea className="textarea" name="bank_info" defaultValue={profile?.bank_info ?? ''} placeholder="〇〇銀行 △△支店 普通 1234567 ヤマダ タロウ" rows={3} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <input className="input" name="bank_name" defaultValue={profile?.bank_name ?? ''} placeholder="銀行名（〇〇銀行）" />
+            <input className="input" name="bank_branch" defaultValue={profile?.bank_branch ?? ''} placeholder="支店名（△△支店）" />
+            <select className="select" name="account_type" defaultValue={profile?.account_type ?? '普通'}>
+              <option value="普通">普通</option>
+              <option value="当座">当座</option>
+            </select>
+            <input className="input num" name="account_number" defaultValue={profile?.account_number ?? ''} placeholder="口座番号（1234567）" />
+          </div>
+          <input className="input" name="account_holder" defaultValue={profile?.account_holder ?? ''} placeholder="口座名義（ヤマダ タロウ）" style={{ marginTop: 10 }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <button type="submit" className="btn btn--primary" disabled={busy}>
