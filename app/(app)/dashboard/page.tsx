@@ -13,16 +13,23 @@ export default async function DashboardPage() {
   const ymLabel = (ym: string) => { const [y, m] = ym.split('-'); return `${y}年${Number(m)}月` }
 
   const supabase = await createClient()
-  const [{ data: contracts }, { data: logs }, { data: expenses }, { data: clients }] = await Promise.all([
+  const [{ data: contracts }, { data: logs }, { data: expenses }, { data: clients }, { data: unpaid }] = await Promise.all([
     supabase.from('contracts').select('*').eq('is_active', true),
     supabase.from('work_logs').select('*').gte('work_date', monthStart).lte('work_date', monthEnd),
     supabase.from('expenses').select('allocated_amount').gte('expense_date', monthStart).lte('expense_date', monthEnd),
     supabase.from('clients').select('id, name'),
+    supabase.from('invoices').select('total_amount, due_date').eq('status', 'unpaid'),
   ])
   const clientMap = Object.fromEntries(((clients ?? []) as { id: string; name: string }[]).map(c => [c.id, c.name]))
 
   const expenseTotal = ((expenses ?? []) as Pick<Expense, 'allocated_amount'>[])
     .reduce((s, e) => s + (e.allocated_amount ?? 0), 0)
+
+  const today = new Date().toISOString().slice(0, 10)
+  const unpaidRows = (unpaid ?? []) as { total_amount: number; due_date: string | null }[]
+  const unpaidTotal = unpaidRows.reduce((s, r) => s + (r.total_amount ?? 0), 0)
+  const unpaidCount = unpaidRows.length
+  const overdueCount = unpaidRows.filter((r) => r.due_date != null && r.due_date < today).length
 
   const summary = buildMonthlySummary(
     yearMonth,
@@ -57,6 +64,13 @@ export default async function DashboardPage() {
         <div className="card statcard">
           <div className="statcard__label"><span className="statcard__ic"><Icon name="wallet" size={17} /></span>今月の経費合計</div>
           <div className="stat"><span className="v num yen">{yen(summary.expenseTotal)}</span></div>
+        </div>
+        <div className="card statcard">
+          <div className="statcard__label"><span className="statcard__ic"><Icon name="copy" size={17} /></span>未入金</div>
+          <div className="stat"><span className="v num yen">{yen(unpaidTotal)}</span></div>
+          <div style={{ fontSize: 'var(--small)', color: overdueCount > 0 ? 'var(--danger, #dc2626)' : 'var(--text-faint)' }}>
+            {unpaidCount}件{overdueCount > 0 ? ` ・ 期日超過 ${overdueCount}件` : ''}
+          </div>
         </div>
       </div>
 

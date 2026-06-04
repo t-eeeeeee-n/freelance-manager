@@ -39,6 +39,12 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
   const existingNos = ((existingInvoices ?? []) as { invoice_no: string }[]).map(i => i.invoice_no)
   const invoiceNo = nextInvoiceNo(yearMonth, existingNos)
   const issueDate = new Date().toISOString().slice(0, 10)
+  // 入金予定日の既定 = 翌月末
+  const [iy, im] = issueDate.split('-').map(Number)
+  const dueY = im === 12 ? iy + 1 : iy
+  const dueM = im === 12 ? 1 : im + 1
+  const dueLast = new Date(dueY, dueM, 0).getDate()
+  const dueDate = `${dueY}-${String(dueM).padStart(2, '0')}-${String(dueLast).padStart(2, '0')}`
 
   const pdfBytes = await renderInvoicePdf({
     invoiceNo,
@@ -65,6 +71,7 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
     issue_date: issueDate,
     total_amount: totalAmount,
     memo: memo ?? null,
+    due_date: dueDate,
   })
   if (insertError) {
     console.error('invoices.insert failed', { code: insertError.code, message: insertError.message })
