@@ -112,7 +112,7 @@ export function TaxUI({ year, annualRevenue, annualExpense, params }: Props) {
       </div>
 
       {/* 手取り + 取り置き目安 — 3 cards: override .summary-totals 2-col grid inline */}
-      <div className="summary-totals" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="summary-totals summary-totals--three">
         <div className="card totalcard totalcard--accent">
           <span className="lbl">年間手取り（可処分）</span>
           <span className="big num yen">{yen(result.netIncome)}</span>
