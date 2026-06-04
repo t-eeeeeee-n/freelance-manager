@@ -22,7 +22,7 @@ export interface MonthlySummary {
 }
 
 /** yearMonth: 'YYYY-MM'。work_date / start_date / end_date は 'YYYY-MM-DD'。 */
-function isMonthWithinPeriod(yearMonth: string, start: string | null, end: string | null): boolean {
+export function isMonthWithinPeriod(yearMonth: string, start: string | null, end: string | null): boolean {
   const monthStart = `${yearMonth}-01`
   const lastDay = new Date(Number(yearMonth.slice(0, 4)), Number(yearMonth.slice(5, 7)), 0).getDate()
   const monthEnd = `${yearMonth}-${String(lastDay).padStart(2, '0')}`
