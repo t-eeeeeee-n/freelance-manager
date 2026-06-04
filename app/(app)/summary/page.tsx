@@ -4,6 +4,7 @@ import type { Contract, WorkLog, Expense } from '@/lib/types'
 import { BillingChip } from '@/components/page-chrome'
 import { Icon } from '@/components/icon'
 import Link from 'next/link'
+import { InvoiceButton } from './invoice-button'
 
 export default async function SummaryPage({ searchParams }: { searchParams: Promise<{ ym?: string }> }) {
   const { ym } = await searchParams
@@ -21,14 +22,17 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
   const next = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`
 
   const supabase = await createClient()
-  const [{ data: contracts }, { data: logs }, { data: expenses }] = await Promise.all([
+  const [{ data: contracts }, { data: logs }, { data: expenses }, { data: clients }] = await Promise.all([
     supabase.from('contracts').select('*').eq('is_active', true),
     supabase.from('work_logs').select('*').gte('work_date', monthStart).lte('work_date', monthEnd),
     supabase.from('expenses').select('allocated_amount').gte('expense_date', monthStart).lte('expense_date', monthEnd),
+    supabase.from('clients').select('id, name'),
   ])
 
   const expenseTotal = ((expenses ?? []) as Pick<Expense, 'allocated_amount'>[])
     .reduce((s, e) => s + (e.allocated_amount ?? 0), 0)
+
+  const clientMap = Object.fromEntries(((clients ?? []) as { id: string; name: string }[]).map(c => [c.id, c.name]))
 
   const summary = buildMonthlySummary(
     yearMonth,
@@ -56,17 +60,18 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
                 <th>クライアント</th><th>契約</th>
                 <th className="ar">実働</th><th className="ar">最低保証</th><th className="ar">請求対象</th>
                 <th className="ar">基本単価</th><th className="ar">超過単価</th><th className="ar">請求金額</th>
+                <th style={{ width: 110 }}>請求書</th>
               </tr>
             </thead>
             <tbody>
               {summary.rows.length === 0 && (
-                <tr><td colSpan={8}>
+                <tr><td colSpan={9}>
                   <div className="empty"><div className="empty__icon"><Icon name="chart" size={22} /></div><p>{ymLabel(yearMonth)}に集計対象の稼働がありません</p></div>
                 </td></tr>
               )}
               {summary.rows.map((r) => (
                 <tr key={r.contractId}>
-                  <td style={{ fontWeight: 600 }}>{r.clientId}</td>
+                  <td style={{ fontWeight: 600 }}>{clientMap[r.clientId] ?? r.clientId}</td>
                   <td><span className="dim">{r.contractName}</span> <BillingChip type={r.billingType} /></td>
                   <td className="ar num">{r.workedHours != null ? hrs(r.workedHours) : <span className="muted">-</span>}</td>
                   <td className="ar num">{r.minimumHours != null ? hrs(r.minimumHours) : <span className="muted">-</span>}</td>
@@ -74,13 +79,14 @@ export default async function SummaryPage({ searchParams }: { searchParams: Prom
                   <td className="ar num">{r.baseRate != null ? <span className="yen">{yen(r.baseRate)}</span> : <span className="muted">-</span>}</td>
                   <td className="ar num">{r.overtimeRate != null ? <span className="yen">{yen(r.overtimeRate)}</span> : <span className="muted">-</span>}</td>
                   <td className="ar num yen" style={{ fontWeight: 700 }}>{yen(r.amount)}</td>
+                  <td><InvoiceButton clientId={r.clientId} yearMonth={yearMonth} /></td>
                 </tr>
               ))}
             </tbody>
             {summary.rows.length > 0 && (
               <tfoot>
                 <tr style={{ borderTop: '2px solid var(--border-strong)' }}>
-                  <td colSpan={7} style={{ fontWeight: 700, textAlign: 'right', height: 52 }}>請求合計（売上）</td>
+                  <td colSpan={8} style={{ fontWeight: 700, textAlign: 'right', height: 52 }}>請求合計（売上）</td>
                   <td className="ar num yen" style={{ fontWeight: 800, fontSize: 'var(--h2)' }}>{yen(summary.totalBilling)}</td>
                 </tr>
               </tfoot>
