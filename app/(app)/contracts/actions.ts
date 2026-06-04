@@ -27,6 +27,7 @@ export async function createContract(formData: FormData) {
   const fixed_amount = numOrNull(formData.get('fixed_amount'))
   const start_date = String(formData.get('start_date') ?? '') || null
   const end_date = String(formData.get('end_date') ?? '') || null
+  const withholding = formData.get('withholding') === 'on'
 
   const v = validate(billing_type, base_hourly_rate, minimum_hours, fixed_amount)
   if (v) return { error: v }
@@ -34,7 +35,7 @@ export async function createContract(formData: FormData) {
   const supabase = await createClient()
   const { error } = await supabase.from('contracts').insert({
     client_id, name, billing_type, base_hourly_rate, minimum_hours,
-    overtime_hourly_rate, fixed_amount, start_date, end_date,
+    overtime_hourly_rate, fixed_amount, start_date, end_date, withholding,
   })
   if (error) return { error: '保存に失敗しました' }
   revalidatePath('/contracts')
@@ -52,6 +53,7 @@ export async function updateContract(id: string, formData: FormData) {
   const fixed_amount = numOrNull(formData.get('fixed_amount'))
   const start_date = String(formData.get('start_date') ?? '') || null
   const end_date = String(formData.get('end_date') ?? '') || null
+  const withholding = formData.get('withholding') === 'on'
 
   const v = validate(billing_type, base_hourly_rate, minimum_hours, fixed_amount)
   if (v) return { error: v }
@@ -59,7 +61,7 @@ export async function updateContract(id: string, formData: FormData) {
   const supabase = await createClient()
   const { error } = await supabase.from('contracts').update({
     name, billing_type, base_hourly_rate, minimum_hours, overtime_hourly_rate,
-    fixed_amount, start_date, end_date, updated_at: new Date().toISOString(),
+    fixed_amount, start_date, end_date, withholding, updated_at: new Date().toISOString(),
   }).eq('id', id)
   if (error) return { error: '更新に失敗しました' }
   revalidatePath('/contracts')

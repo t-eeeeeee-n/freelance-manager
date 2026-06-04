@@ -166,6 +166,12 @@ function ContractForm({ mode, record, clients, onSave, onCancel }: {
         <Field label="終了日" hint="未入力なら継続中">
           <input className="input" type="date" name="end_date" defaultValue={record?.end_date ?? ''} />
         </Field>
+        <Field label="源泉徴収" hint="この契約の請求に源泉徴収が発生する場合にオン">
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" name="withholding" defaultChecked={record?.withholding ?? false} />
+            <span>源泉徴収あり（10.21% / 100万超は20.42%）</span>
+          </label>
+        </Field>
       </form>
     </EditorShell>
   )
