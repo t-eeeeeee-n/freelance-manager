@@ -49,6 +49,15 @@ describe('buildAnnualProjection', () => {
     const r = buildAnnualProjection(2026, [fixedContract({ end_date: '2026-03-31' })], [], '2026-01-01')
     expect(r.projected).toBe(900_000) // 1-3月のみ 300,000*3
   })
+
+  it('当月のみ実績がある契約 → 見込みに当月実績が反映される（消えない）', () => {
+    // 6/5時点、6月開始の時給契約に6月の稼働のみ。完了月(1-5月)は実績0で見込みも0だが、当月実績は反映される。
+    const c = hourlyContract({ start_date: '2026-06-01' })
+    const logs = [log('w1', '2026-06-03', 10.5)]
+    const r = buildAnnualProjection(2026, [c], logs, '2026-06-05')
+    expect(r.actual).toBe(0)          // 完了月の実績なし（当月は実績(YTD)に含めない）
+    expect(r.projected).toBe(52_500)  // 当月実績 10.5h*5000
+  })
 })
 
 describe('buildMonthlyAmounts', () => {
