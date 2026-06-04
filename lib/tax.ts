@@ -44,10 +44,10 @@ export const DEFAULT_TAX_PARAMS: TaxParams = {
   basicDeductionIncome: 480000,
   basicDeductionResident: 430000,
   nationalPensionAnnual: 204000,
-  healthInsuranceRate: 0.10,
-  healthInsuranceFixed: 50000,
-  residentTaxRate: 0.10,
-  residentTaxFixed: 5000,
+  healthInsuranceRate: 0.10,    // 国保 所得比例分の率（自治体差大・概算）
+  healthInsuranceFixed: 50000,  // 国保 均等割等の定額分（概算）
+  residentTaxRate: 0.10,        // 住民税 所得割の率
+  residentTaxFixed: 5000,       // 住民税 均等割（定額）
   otherDeductions: 0,
 }
 
@@ -63,12 +63,12 @@ const INCOME_TAX_BRACKETS: ReadonlyArray<[number, number, number]> = [
   [Infinity, 0.45, 4_796_000],
 ]
 
-/** 復興特別所得税を含まない所得税本体。課税所得が0以下なら0。 */
+/** 所得税本体（端数処理前・復興特別所得税抜き）。課税所得が0以下なら0。 */
 export function progressiveIncomeTax(taxableIncome: number): number {
   if (taxableIncome <= 0) return 0
   for (const [upper, rate, deduction] of INCOME_TAX_BRACKETS) {
     if (taxableIncome <= upper) {
-      return Math.round(taxableIncome * rate - deduction)
+      return taxableIncome * rate - deduction
     }
   }
   return 0 // 到達しない（Infinity で必ず捕捉）
@@ -82,6 +82,7 @@ export function calculateTax(input: TaxInput): TaxResult {
   const businessIncome = Math.max(annualRevenue - annualExpense - blue, 0)
 
   if (businessIncome === 0) {
+    // 赤字年（経費>売上）は手取りが負になりうる。損失の事実を表すため意図的にクランプしない。
     const netIncome = annualRevenue - annualExpense
     return {
       businessIncome: 0,

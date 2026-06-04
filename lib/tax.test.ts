@@ -9,13 +9,13 @@ describe('progressiveIncomeTax（所得税本体・復興税抜き）', () => {
     expect(progressiveIncomeTax(1_950_000)).toBe(97_500) // 1,950,000 * 0.05
   })
   it('195万超は10%・控除97,500（境界の連続性）', () => {
-    expect(progressiveIncomeTax(1_950_001)).toBe(Math.round(1_950_001 * 0.10 - 97_500))
+    expect(progressiveIncomeTax(1_950_001)).toBeCloseTo(1_950_001 * 0.10 - 97_500, 5)
   })
   it('330万ちょうどは10%', () => {
     expect(progressiveIncomeTax(3_300_000)).toBe(3_300_000 * 0.10 - 97_500) // 232,500
   })
   it('330万超は20%・控除427,500（境界の連続性）', () => {
-    expect(progressiveIncomeTax(3_300_001)).toBe(Math.round(3_300_001 * 0.20 - 427_500))
+    expect(progressiveIncomeTax(3_300_001)).toBeCloseTo(3_300_001 * 0.20 - 427_500, 5)
   })
   it('695万ちょうどは20%', () => {
     expect(progressiveIncomeTax(6_950_000)).toBe(6_950_000 * 0.20 - 427_500) // 962,500
@@ -82,5 +82,25 @@ describe('calculateTax', () => {
     expect(r.reserve.monthlyReserve).toBe(0)
     expect(r.reserve.reserveRate).toBe(0)
     expect(r.reserve.monthlyDisposable).toBe(0)
+  })
+
+  it('所得税は二重丸めしない（本体が小数でも末尾で1回だけ丸める）', () => {
+    // 本体が小数になるケースを直接検証
+    const taxable = 1_950_001 // 本体 = 97,500.1（小数）
+    const single = Math.round((taxable * 0.10 - 97_500) * 1.021) // 末尾1回丸め
+    const double = Math.round(Math.round(taxable * 0.10 - 97_500) * 1.021) // 旧: 二重丸め
+    expect(progressiveIncomeTax(taxable) * 1.021).toBeCloseTo(97_500.1 * 1.021, 3)
+    expect(single).not.toBe(double) // この値では1円ズレることを示す
+    expect(Math.round(progressiveIncomeTax(taxable) * 1.021)).toBe(single)
+  })
+
+  it('赤字年（経費>売上）: 税・保険0、手取りは負のまま（クランプしない）', () => {
+    const r = calculateTax({ annualRevenue: 500_000, annualExpense: 1_000_000, params: DEFAULT_TAX_PARAMS })
+    expect(r.businessIncome).toBe(0)
+    expect(r.totalTaxAndInsurance).toBe(0)
+    expect(r.netIncome).toBe(-500_000)
+    expect(r.reserve.monthlyReserve).toBe(0)
+    expect(r.reserve.reserveRate).toBe(0)
+    expect(r.reserve.monthlyDisposable).toBe(Math.round(-500_000 / 12))
   })
 })
