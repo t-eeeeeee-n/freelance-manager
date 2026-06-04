@@ -16,6 +16,7 @@ export interface TaxParams {
 export interface TaxInput {
   annualRevenue: number
   annualExpense: number
+  annualWithholding?: number
   params: TaxParams
 }
 
@@ -30,6 +31,9 @@ export interface TaxResult {
   residentTax: number               // 住民税
   totalTaxAndInsurance: number      // 税・保険合計
   netIncome: number                 // 手取り（年・可処分）
+  withholding: number          // 源泉徴収合計（前払い所得税）
+  incomeTaxDue: number         // 確定申告での追加納付（max(所得税 - 源泉, 0)）
+  incomeTaxRefund: number      // 還付見込み（max(源泉 - 所得税, 0)）
   reserve: {
     monthlyReserve: number     // 毎月の取り置き目安（税・保険合計 ÷ 12）
     reserveRate: number        // 取り置き率（税・保険合計 ÷ 売上、0〜1）
@@ -77,6 +81,7 @@ export function progressiveIncomeTax(taxableIncome: number): number {
 /** スペック §8 の概算ロジック。事業所得が0なら税・保険は全て0（売上0→全て0）。 */
 export function calculateTax(input: TaxInput): TaxResult {
   const { annualRevenue, annualExpense, params: p } = input
+  const withholding = input.annualWithholding ?? 0
 
   const blue = p.filingType === 'blue' ? p.blueDeduction : 0
   const businessIncome = Math.max(annualRevenue - annualExpense - blue, 0)
@@ -93,9 +98,9 @@ export function calculateTax(input: TaxInput): TaxResult {
       incomeTax: 0,
       taxableIncomeResident: 0,
       residentTax: 0,
-      totalTaxAndInsurance: 0,
-      netIncome,
-      reserve: buildReserve(0, netIncome, annualRevenue),
+      totalTaxAndInsurance: 0, netIncome,
+      withholding: 0, incomeTaxDue: 0, incomeTaxRefund: 0,
+      reserve: buildReserve(0, netIncome, annualRevenue, 0),
     }
   }
 
@@ -116,6 +121,9 @@ export function calculateTax(input: TaxInput): TaxResult {
   const totalTaxAndInsurance = incomeTax + residentTax + nationalPension + healthInsurance
   const netIncome = annualRevenue - annualExpense - totalTaxAndInsurance
 
+  const incomeTaxDue = Math.max(incomeTax - withholding, 0)
+  const incomeTaxRefund = Math.max(withholding - incomeTax, 0)
+
   return {
     businessIncome,
     nationalPension,
@@ -127,14 +135,18 @@ export function calculateTax(input: TaxInput): TaxResult {
     residentTax,
     totalTaxAndInsurance,
     netIncome,
-    reserve: buildReserve(totalTaxAndInsurance, netIncome, annualRevenue),
+    withholding,
+    incomeTaxDue,
+    incomeTaxRefund,
+    reserve: buildReserve(totalTaxAndInsurance, netIncome, annualRevenue, withholding),
   }
 }
 
-function buildReserve(totalTaxAndInsurance: number, netIncome: number, annualRevenue: number) {
+function buildReserve(totalTaxAndInsurance: number, netIncome: number, annualRevenue: number, withholding: number) {
+  const reserveBase = Math.max(totalTaxAndInsurance - withholding, 0)
   return {
-    monthlyReserve: Math.round(totalTaxAndInsurance / 12),
-    reserveRate: annualRevenue > 0 ? totalTaxAndInsurance / annualRevenue : 0,
+    monthlyReserve: Math.round(reserveBase / 12),
+    reserveRate: annualRevenue > 0 ? reserveBase / annualRevenue : 0,
     monthlyDisposable: Math.round(netIncome / 12),
   }
 }

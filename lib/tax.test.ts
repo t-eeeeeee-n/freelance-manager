@@ -103,4 +103,41 @@ describe('calculateTax', () => {
     expect(r.reserve.reserveRate).toBe(0)
     expect(r.reserve.monthlyDisposable).toBe(Math.round(-500_000 / 12))
   })
+
+  it('源泉0（未指定）なら Phase3 と同一の取り置き（後方互換）', () => {
+    const r = calculateTax({ annualRevenue: 6_000_000, annualExpense: 1_000_000, params: DEFAULT_TAX_PARAMS })
+    expect(r.withholding).toBe(0)
+    expect(r.incomeTaxDue).toBe(r.incomeTax)
+    expect(r.incomeTaxRefund).toBe(0)
+    expect(r.reserve.monthlyReserve).toBe(103_528) // 税保険合計/12（源泉なし）
+  })
+
+  it('源泉 < 所得税 → 追加納付あり・取り置きが源泉分だけ減る', () => {
+    const base = calculateTax({ annualRevenue: 6_000_000, annualExpense: 1_000_000, params: DEFAULT_TAX_PARAMS })
+    const wh = 100_000
+    const r = calculateTax({ annualRevenue: 6_000_000, annualExpense: 1_000_000, annualWithholding: wh, params: DEFAULT_TAX_PARAMS })
+    expect(r.withholding).toBe(wh)
+    expect(r.incomeTaxRefund).toBe(0)
+    expect(r.incomeTaxDue).toBe(base.incomeTax - wh)
+    expect(r.reserve.monthlyReserve).toBe(Math.round((base.totalTaxAndInsurance - wh) / 12))
+  })
+
+  it('源泉 > 所得税 → 還付見込みあり', () => {
+    const r = calculateTax({ annualRevenue: 6_000_000, annualExpense: 1_000_000, annualWithholding: 5_000_000, params: DEFAULT_TAX_PARAMS })
+    expect(r.incomeTaxRefund).toBe(5_000_000 - r.incomeTax)
+    expect(r.incomeTaxDue).toBe(0)
+  })
+
+  it('取り置きは源泉が税保険合計を超えても0未満にならない', () => {
+    const r = calculateTax({ annualRevenue: 6_000_000, annualExpense: 1_000_000, annualWithholding: 99_000_000, params: DEFAULT_TAX_PARAMS })
+    expect(r.reserve.monthlyReserve).toBe(0)
+    expect(r.reserve.reserveRate).toBe(0)
+  })
+
+  it('売上0は源泉が渡っても全て0（ゲート維持）', () => {
+    const r = calculateTax({ annualRevenue: 0, annualExpense: 0, annualWithholding: 50_000, params: DEFAULT_TAX_PARAMS })
+    expect(r.withholding).toBe(0)
+    expect(r.incomeTaxDue).toBe(0)
+    expect(r.incomeTaxRefund).toBe(0)
+  })
 })
