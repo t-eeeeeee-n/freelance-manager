@@ -6,19 +6,27 @@ import { calculateTax, type TaxParams } from '@/lib/tax'
 
 interface Props {
   year: number
-  annualRevenue: number
+  actualRevenue: number
+  projectedRevenue: number
   annualExpense: number
   params: TaxParams
 }
 
 const yen = (n: number) => Math.round(n).toLocaleString('ja-JP')
 
-export function TaxUI({ year, annualRevenue, annualExpense, params }: Props) {
+export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, params }: Props) {
   // what-if 用の一時上書き（保存しない）
-  const [revenue, setRevenue] = React.useState(annualRevenue)
+  const [basis, setBasis] = React.useState<'actual' | 'projected'>('projected')
+  const basisRevenue = basis === 'projected' ? projectedRevenue : actualRevenue
+  const [revenue, setRevenue] = React.useState(basisRevenue)
   const [expense, setExpense] = React.useState(annualExpense)
   const [filingType, setFilingType] = React.useState(params.filingType)
   const [otherDeductions, setOtherDeductions] = React.useState(params.otherDeductions)
+
+  const onBasis = (b: 'actual' | 'projected') => {
+    setBasis(b)
+    setRevenue(b === 'projected' ? projectedRevenue : actualRevenue)
+  }
 
   const result = React.useMemo(
     () => calculateTax({
@@ -29,7 +37,7 @@ export function TaxUI({ year, annualRevenue, annualExpense, params }: Props) {
     [revenue, expense, filingType, otherDeductions, params],
   )
 
-  const dirty = revenue !== annualRevenue || expense !== annualExpense
+  const dirty = revenue !== basisRevenue || expense !== annualExpense
     || filingType !== params.filingType || otherDeductions !== params.otherDeductions
 
   const rows: [string, number][] = [
@@ -51,6 +59,11 @@ export function TaxUI({ year, annualRevenue, annualExpense, params }: Props) {
           <span className="cur num">{year}年</span>
           <Link href={`/tax?y=${year + 1}`} className="nav" aria-label="翌年"><Icon name="chevR" size={16} /></Link>
         </div>
+      </div>
+
+      <div className="ctabs" style={{ marginBottom: 16 }}>
+        <button className="ctab" data-active={String(basis === 'projected')} onClick={() => onBasis('projected')}>着地見込み</button>
+        <button className="ctab" data-active={String(basis === 'actual')} onClick={() => onBasis('actual')}>実績(YTD)</button>
       </div>
 
       <div className="errbox" style={{ marginBottom: 16 }}>
@@ -85,7 +98,7 @@ export function TaxUI({ year, annualRevenue, annualExpense, params }: Props) {
           </div>
         </div>
         <p style={{ fontSize: 'var(--small)', color: 'var(--text-faint)', marginTop: 12 }}>
-          ここでの変更は保存されません（お試し計算）。確定値は
+          ここでの変更は保存されません（お試し計算）。経費は実績のみ（見込み補完なし）。確定値は
           <Link href="/settings/tax" style={{ textDecoration: 'underline', margin: '0 4px' }}>税試算パラメータ設定</Link>
           で編集してください。{dirty && '（現在お試し値で計算中）'}
         </p>

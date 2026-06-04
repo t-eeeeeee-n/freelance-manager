@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { buildAnnualRevenue } from '@/lib/summary'
+import { buildAnnualProjection } from '@/lib/projection'
 import { DEFAULT_TAX_PARAMS, type TaxParams } from '@/lib/tax'
 import type { Contract, WorkLog, Expense, TaxSettings } from '@/lib/types'
 import { TaxUI } from './tax-ui'
@@ -34,14 +34,16 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
     supabase.from('tax_settings').select('*').limit(1).maybeSingle(),
   ])
 
-  const annualRevenue = buildAnnualRevenue(year, (contracts ?? []) as Contract[], (logs ?? []) as WorkLog[])
+  const today = new Date().toISOString().slice(0, 10)
+  const projection = buildAnnualProjection(year, (contracts ?? []) as Contract[], (logs ?? []) as WorkLog[], today)
   const annualExpense = ((expenses ?? []) as Pick<Expense, 'allocated_amount'>[])
     .reduce((s, e) => s + (e.allocated_amount ?? 0), 0)
 
   return (
     <TaxUI
       year={year}
-      annualRevenue={annualRevenue}
+      actualRevenue={projection.actual}
+      projectedRevenue={projection.projected}
       annualExpense={annualExpense}
       params={toParams((settings ?? null) as TaxSettings | null)}
     />
