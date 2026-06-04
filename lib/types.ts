@@ -46,3 +46,19 @@ export interface Expense {
   memo: string | null
   is_recurring: boolean
 }
+
+export type TaxFilingType = 'blue' | 'white'
+
+export interface TaxSettings {
+  id: string
+  filing_type: TaxFilingType
+  blue_deduction: number
+  basic_deduction_income: number
+  basic_deduction_resident: number
+  national_pension_annual: number
+  health_insurance_rate: number
+  health_insurance_fixed: number
+  resident_tax_rate: number
+  resident_tax_fixed: number
+  other_deductions: number
+}
