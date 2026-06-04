@@ -68,7 +68,7 @@ export default async function DashboardPage() {
         <div className="card statcard">
           <div className="statcard__label"><span className="statcard__ic"><Icon name="copy" size={17} /></span>未入金</div>
           <div className="stat"><span className="v num yen">{yen(unpaidTotal)}</span></div>
-          <div style={{ fontSize: 'var(--small)', color: overdueCount > 0 ? 'var(--danger, #dc2626)' : 'var(--text-faint)' }}>
+          <div style={{ fontSize: 'var(--small)', color: overdueCount > 0 ? 'var(--warn)' : 'var(--text-faint)' }}>
             {unpaidCount}件{overdueCount > 0 ? ` ・ 期日超過 ${overdueCount}件` : ''}
           </div>
         </div>

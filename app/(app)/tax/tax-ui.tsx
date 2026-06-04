@@ -103,9 +103,12 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
           </div>
         </div>
         <p style={{ fontSize: 'var(--small)', color: 'var(--text-faint)', marginTop: 12 }}>
-          ここでの変更は保存されません（お試し計算）。経費は実績のみ（見込み補完なし）。確定値は
+          ここでの変更は保存されません（お試し計算）。確定値は
           <Link href="/settings/tax" style={{ textDecoration: 'underline', margin: '0 4px' }}>税試算パラメータ設定</Link>
           で編集してください。{dirty && '（現在お試し値で計算中）'}
+        </p>
+        <p style={{ fontSize: 'var(--small)', color: 'var(--text-faint)', marginTop: 6 }}>
+          着地見込みは売上のみ年換算し、経費・源泉徴収は実績ベースです。そのため年の途中ほど税・取り置きは高め（取りすぎ方向）に出ます。売上を手動上書きしても源泉年額は基準値のまま固定です。
         </p>
       </div>
 
@@ -127,7 +130,7 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
               {result.withholding > 0 && (
                 <tr>
                   <td style={{ fontWeight: 600 }}>{result.incomeTaxRefund > 0 ? '還付見込み' : '確定申告での追加納付'}</td>
-                  <td className="ar num yen" style={{ fontWeight: 700, color: result.incomeTaxRefund > 0 ? 'var(--ok, #16a34a)' : 'inherit' }}>
+                  <td className="ar num yen" style={{ fontWeight: 700, color: result.incomeTaxRefund > 0 ? 'var(--pos)' : 'inherit' }}>
                     {result.incomeTaxRefund > 0 ? yen(result.incomeTaxRefund) : yen(result.incomeTaxDue)}
                   </td>
                 </tr>

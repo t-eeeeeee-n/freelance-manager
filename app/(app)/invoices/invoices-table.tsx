@@ -69,8 +69,8 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
                   </td>
                   <td>
                     {inv.status === 'paid'
-                      ? <span className="chip chip--dot" style={{ color: 'var(--ok, #16a34a)' }}>入金済 {inv.paid_date ?? ''}</span>
-                      : <span className="chip chip--dot" style={{ color: overdue ? 'var(--danger, #dc2626)' : 'var(--text-dim)' }}>{overdue ? '期日超過' : '未入金'}</span>}
+                      ? <span className="chip chip--dot" style={{ color: 'var(--pos)' }}>入金済 {inv.paid_date ?? ''}</span>
+                      : <span className="chip chip--dot" style={{ color: overdue ? 'var(--warn)' : 'var(--text-dim)' }}>{overdue ? '期日超過' : '未入金'}</span>}
                   </td>
                   <td>
                     <button className="btn btn--ghost btn--sm" disabled={busy === inv.id} onClick={() => toggle(inv)}>
