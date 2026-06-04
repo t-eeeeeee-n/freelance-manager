@@ -13,11 +13,13 @@ export default async function DashboardPage() {
   const ymLabel = (ym: string) => { const [y, m] = ym.split('-'); return `${y}年${Number(m)}月` }
 
   const supabase = await createClient()
-  const [{ data: contracts }, { data: logs }, { data: expenses }] = await Promise.all([
+  const [{ data: contracts }, { data: logs }, { data: expenses }, { data: clients }] = await Promise.all([
     supabase.from('contracts').select('*').eq('is_active', true),
     supabase.from('work_logs').select('*').gte('work_date', monthStart).lte('work_date', monthEnd),
     supabase.from('expenses').select('allocated_amount').gte('expense_date', monthStart).lte('expense_date', monthEnd),
+    supabase.from('clients').select('id, name'),
   ])
+  const clientMap = Object.fromEntries(((clients ?? []) as { id: string; name: string }[]).map(c => [c.id, c.name]))
 
   const expenseTotal = ((expenses ?? []) as Pick<Expense, 'allocated_amount'>[])
     .reduce((s, e) => s + (e.allocated_amount ?? 0), 0)
@@ -76,7 +78,7 @@ export default async function DashboardPage() {
             <div className="contractrow" key={r.contractId}>
               <div>
                 <div className="contractrow__name">{r.contractName} <BillingChip type={r.billingType} /></div>
-                <div className="contractrow__client" style={{ fontSize: 'var(--small)', color: 'var(--text-faint)' }}>{r.clientId}</div>
+                <div className="contractrow__client" style={{ fontSize: 'var(--small)', color: 'var(--text-faint)' }}>{clientMap[r.clientId] ?? '—'}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div className="num" style={{ fontWeight: 600 }}>{r.workedHours != null ? hrs(r.workedHours) : '—'}</div>
