@@ -44,12 +44,19 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
   const whRate = settings?.withholding_rate ?? 0.1021
   const whRateHigh = settings?.withholding_rate_high ?? 0.2042
   const amounts = buildMonthlyAmounts(year, (contracts ?? []) as Contract[], (logs ?? []) as WorkLog[], today)
-  const withholdingActual = amounts
-    .filter((a) => a.withholding && a.isActual)
-    .reduce((s, a) => s + calcWithholding(a.amount, whRate, whRateHigh), 0)
-  const withholdingProjected = amounts
-    .filter((a) => a.withholding)
-    .reduce((s, a) => s + calcWithholding(a.amount, whRate, whRateHigh), 0)
+  function annualWithholding(filterFn: (a: { withholding: boolean; isActual: boolean }) => boolean): number {
+    const byClientMonth = new Map<string, number>()
+    for (const a of amounts) {
+      if (!a.withholding || !filterFn(a)) continue
+      const key = `${a.ym}|${a.clientId}`
+      byClientMonth.set(key, (byClientMonth.get(key) ?? 0) + a.amount)
+    }
+    let total = 0
+    for (const base of byClientMonth.values()) total += calcWithholding(base, whRate, whRateHigh)
+    return total
+  }
+  const withholdingActual = annualWithholding((a) => a.isActual)
+  const withholdingProjected = annualWithholding(() => true)
 
   return (
     <TaxUI

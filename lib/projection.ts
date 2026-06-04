@@ -4,6 +4,7 @@ import { buildMonthlySummary, isMonthWithinPeriod } from './summary'
 export interface MonthlyAmount {
   ym: string
   contractId: string
+  clientId: string
   withholding: boolean
   amount: number
   isActual: boolean
@@ -48,11 +49,11 @@ export function buildMonthlyAmounts(
       const summ = buildMonthlySummary(ym, contracts, workLogs, 0)
       for (const r of summ.rows) {
         const c = contracts.find((x) => x.id === r.contractId)
-        out.push({ ym, contractId: r.contractId, withholding: c?.withholding ?? false, amount: r.amount, isActual: true })
+        out.push({ ym, contractId: r.contractId, clientId: r.clientId, withholding: c?.withholding ?? false, amount: r.amount, isActual: true })
       }
     } else {
       for (const c of contracts) {
-        out.push({ ym, contractId: c.id, withholding: c.withholding, amount: estimateMonthly(c, ym, recentAvg[c.id]), isActual: false })
+        out.push({ ym, contractId: c.id, clientId: c.client_id, withholding: c.withholding, amount: estimateMonthly(c, ym, recentAvg[c.id]), isActual: false })
       }
     }
   }

@@ -60,6 +60,7 @@ describe('buildMonthlyAmounts', () => {
     expect(jan.isActual).toBe(true)
     expect(jan.amount).toBe(100_000)
     expect(jan.withholding).toBe(true)
+    expect(jan.clientId).toBe('cl1')
     expect(feb.isActual).toBe(false)
   })
 })
