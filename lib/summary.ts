@@ -69,3 +69,13 @@ export function buildMonthlySummary(
   const totalBilling = rows.reduce((sum, r) => sum + r.amount, 0)
   return { yearMonth, rows, totalBilling, expenseTotal }
 }
+
+/** 対象年（暦年）の全契約の請求金額合計。buildMonthlySummary を 12 ヶ月分合算して再利用。 */
+export function buildAnnualRevenue(year: number, contracts: Contract[], workLogs: WorkLog[]): number {
+  let total = 0
+  for (let m = 1; m <= 12; m++) {
+    const ym = `${year}-${String(m).padStart(2, '0')}`
+    total += buildMonthlySummary(ym, contracts, workLogs, 0).totalBilling
+  }
+  return total
+}

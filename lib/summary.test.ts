@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildMonthlySummary } from './summary'
+import { buildMonthlySummary, buildAnnualRevenue } from './summary'
 import type { Contract, WorkLog } from './types'
 
 const contract = (over: Partial<Contract>): Contract => ({
@@ -96,5 +96,30 @@ describe('buildMonthlySummary', () => {
       log({ actual_hours: 10, work_date: '2026-06-10' }),
     ], 0)
     expect(res.rows[0].amount).toBe(50000)
+  })
+})
+
+describe('buildAnnualRevenue', () => {
+  const hourly: Contract = {
+    id: 'c1', client_id: 'cl1', name: '時給契約', billing_type: 'hourly',
+    minimum_hours: null, base_hourly_rate: 5000, overtime_hourly_rate: null,
+    fixed_amount: null, start_date: null, end_date: null, is_active: true,
+  }
+  const log = (id: string, date: string, hours: number): WorkLog => ({
+    id, client_id: 'cl1', contract_id: 'c1', work_date: date,
+    planned_hours: null, actual_hours: hours,
+    actual_start_time: null, actual_end_time: null, break_minutes: 0,
+    memo: null, status: 'worked',
+  })
+
+  it('対象年の12ヶ月分の請求を合算する', () => {
+    const logs = [log('w1', '2026-01-10', 10), log('w2', '2026-07-20', 20)]
+    // 1月: 10h*5000=50,000 / 7月: 20h*5000=100,000 → 150,000
+    expect(buildAnnualRevenue(2026, [hourly], logs)).toBe(150_000)
+  })
+
+  it('対象年以外の稼働は含めない', () => {
+    const logs = [log('w1', '2025-12-31', 10), log('w2', '2027-01-01', 10)]
+    expect(buildAnnualRevenue(2026, [hourly], logs)).toBe(0)
   })
 })
