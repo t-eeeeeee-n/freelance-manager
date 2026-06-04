@@ -37,6 +37,7 @@ export interface InvoiceData {
   clientName: string
   rows: SummaryRow[]
   totalAmount: number
+  withholdingAmount?: number
   memo?: string
   profile: {
     display_name: string | null
@@ -89,10 +90,27 @@ export function InvoiceDocument({ data }: { data: InvoiceData }) {
               <Text style={{ flex: 1, textAlign: 'right' }}>{yen(r.amount)}</Text>
             </View>
           ))}
-          <View style={S.totalRow}>
-            <Text style={[S.bold, { flex: 4 }]}>合計</Text>
-            <Text style={[S.bold, { flex: 1, textAlign: 'right', fontSize: 13 }]}>{yen(data.totalAmount)}</Text>
-          </View>
+          {data.withholdingAmount && data.withholdingAmount > 0 ? (
+            <>
+              <View style={S.totalRow}>
+                <Text style={[S.bold, { flex: 4 }]}>小計</Text>
+                <Text style={[S.bold, { flex: 1, textAlign: 'right' }]}>{yen(data.totalAmount)}</Text>
+              </View>
+              <View style={S.row}>
+                <Text style={{ flex: 4 }}>源泉徴収税額</Text>
+                <Text style={{ flex: 1, textAlign: 'right' }}>▲{yen(data.withholdingAmount)}</Text>
+              </View>
+              <View style={S.totalRow}>
+                <Text style={[S.bold, { flex: 4 }]}>差引請求額</Text>
+                <Text style={[S.bold, { flex: 1, textAlign: 'right', fontSize: 13 }]}>{yen(data.totalAmount - data.withholdingAmount)}</Text>
+              </View>
+            </>
+          ) : (
+            <View style={S.totalRow}>
+              <Text style={[S.bold, { flex: 4 }]}>合計</Text>
+              <Text style={[S.bold, { flex: 1, textAlign: 'right', fontSize: 13 }]}>{yen(data.totalAmount)}</Text>
+            </View>
+          )}
         </View>
 
         {data.profile.bank_info ? (

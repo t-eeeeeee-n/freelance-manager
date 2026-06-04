@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { buildMonthlySummary } from '@/lib/summary'
 import { nextInvoiceNo } from '@/lib/invoice-number'
 import { renderInvoicePdf } from '@/lib/pdf'
+import { calcWithholding } from '@/lib/withholding'
 import type { Contract, WorkLog } from '@/lib/types'
 
 function composeBankInfo(p: { bank_name?: string | null; bank_branch?: string | null; account_type?: string | null; account_number?: string | null; account_holder?: string | null; bank_info?: string | null } | null): string | null {
@@ -20,6 +21,10 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
   const { data: clientData } = await supabase.from('clients').select('*').eq('id', clientId).single()
   if (!clientData) return { error: 'クライアントが見つかりません' }
 
+  const { data: taxSettings } = await supabase.from('tax_settings').select('withholding_rate, withholding_rate_high').limit(1).maybeSingle()
+  const whRate = taxSettings?.withholding_rate ?? 0.1021
+  const whRateHigh = taxSettings?.withholding_rate_high ?? 0.2042
+
   const monthStart = `${yearMonth}-01`
   const lastDay = new Date(Number(yearMonth.slice(0, 4)), Number(yearMonth.slice(5, 7)), 0).getDate()
   const monthEnd = `${yearMonth}-${String(lastDay).padStart(2, '0')}`
@@ -34,6 +39,10 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
   const billableRows = summary.rows.filter(r => r.amount > 0)
   if (billableRows.length === 0) return { error: 'この月・クライアントの請求データがありません' }
   const totalAmount = billableRows.reduce((s, r) => s + r.amount, 0)
+
+  const whContractIds = new Set(((contracts ?? []) as Contract[]).filter((c) => c.withholding).map((c) => c.id))
+  const withholdingBase = billableRows.filter((r) => whContractIds.has(r.contractId)).reduce((s, r) => s + r.amount, 0)
+  const withholdingAmount = calcWithholding(withholdingBase, whRate, whRateHigh)
 
   const { data: existingInvoices } = await supabase.from('invoices').select('invoice_no').eq('year_month', yearMonth)
   const existingNos = ((existingInvoices ?? []) as { invoice_no: string }[]).map(i => i.invoice_no)
@@ -53,6 +62,7 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
     clientName: clientData.name,
     rows: billableRows,
     totalAmount,
+    withholdingAmount,
     memo,
     profile: {
       display_name: profile?.display_name ?? null,
@@ -70,6 +80,7 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
     year_month: yearMonth,
     issue_date: issueDate,
     total_amount: totalAmount,
+    withholding_amount: withholdingAmount,
     memo: memo ?? null,
     due_date: dueDate,
   })
