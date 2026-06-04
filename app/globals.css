@@ -196,7 +196,7 @@ tr:hover .rowactions { opacity: 1; }
 .empty p { margin: 0; font-size: var(--base); }
 
 /* ── Stats ── */
-.grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+.grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--gap); }
 @media (max-width: 760px) { .grid-stats { grid-template-columns: 1fr; } }
 .statcard { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
 .statcard__label { display: flex; align-items: center; gap: 9px; font-size: var(--small); font-weight: 600; color: var(--text-dim); }
