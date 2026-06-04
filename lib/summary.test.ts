@@ -5,7 +5,7 @@ import type { Contract, WorkLog } from './types'
 const contract = (over: Partial<Contract>): Contract => ({
   id: 'c1', client_id: 'cl1', name: '契約A', billing_type: 'hourly',
   minimum_hours: null, base_hourly_rate: 5000, overtime_hourly_rate: null,
-  fixed_amount: null, start_date: '2026-01-01', end_date: null, is_active: true, ...over,
+  fixed_amount: null, start_date: '2026-01-01', end_date: null, is_active: true, withholding: false, ...over,
 })
 
 const log = (over: Partial<WorkLog>): WorkLog => ({
@@ -103,7 +103,7 @@ describe('buildAnnualRevenue', () => {
   const hourly: Contract = {
     id: 'c1', client_id: 'cl1', name: '時給契約', billing_type: 'hourly',
     minimum_hours: null, base_hourly_rate: 5000, overtime_hourly_rate: null,
-    fixed_amount: null, start_date: null, end_date: null, is_active: true,
+    fixed_amount: null, start_date: null, end_date: null, is_active: true, withholding: false,
   }
   const log = (id: string, date: string, hours: number): WorkLog => ({
     id, client_id: 'cl1', contract_id: 'c1', work_date: date,

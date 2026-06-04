@@ -20,6 +20,7 @@ export interface Contract {
   start_date: string | null
   end_date: string | null
   is_active: boolean
+  withholding: boolean
 }
 
 export interface WorkLog {
@@ -47,6 +48,22 @@ export interface Expense {
   is_recurring: boolean
 }
 
+export type InvoiceStatus = 'unpaid' | 'paid'
+
+export interface Invoice {
+  id: string
+  invoice_no: string
+  client_id: string
+  year_month: string
+  issue_date: string
+  total_amount: number
+  memo: string | null
+  status: InvoiceStatus
+  paid_date: string | null
+  due_date: string | null
+  withholding_amount: number
+}
+
 export type TaxFilingType = 'blue' | 'white'
 
 export interface TaxSettings {
@@ -61,4 +78,6 @@ export interface TaxSettings {
   resident_tax_rate: number
   resident_tax_fixed: number
   other_deductions: number
+  withholding_rate: number
+  withholding_rate_high: number
 }
