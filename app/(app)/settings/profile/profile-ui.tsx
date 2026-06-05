@@ -2,6 +2,7 @@
 import React from 'react'
 import { upsertProfile } from './actions'
 import { useToast } from '@/components/toast'
+import { CustomSelect } from '@/components/custom-select'
 
 interface Profile {
   display_name: string | null
@@ -21,6 +22,7 @@ export function ProfileUI({ profile }: { profile: Profile | null }) {
   const toast = useToast()
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [accountType, setAccountType] = React.useState(profile?.account_type ?? '普通')
   const formRef = React.useRef<HTMLFormElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,10 +63,8 @@ export function ProfileUI({ profile }: { profile: Profile | null }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <input className="input" name="bank_name" defaultValue={profile?.bank_name ?? ''} placeholder="銀行名（〇〇銀行）" />
             <input className="input" name="bank_branch" defaultValue={profile?.bank_branch ?? ''} placeholder="支店名（△△支店）" />
-            <select className="select" name="account_type" defaultValue={profile?.account_type ?? '普通'}>
-              <option value="普通">普通</option>
-              <option value="当座">当座</option>
-            </select>
+            <CustomSelect name="account_type" value={accountType} onChange={setAccountType}
+              options={[{ value: '普通', label: '普通' }, { value: '当座', label: '当座' }]} />
             <input className="input num" name="account_number" defaultValue={profile?.account_number ?? ''} placeholder="口座番号（1234567）" />
           </div>
           <input className="input" name="account_holder" defaultValue={profile?.account_holder ?? ''} placeholder="口座名義（ヤマダ タロウ）" style={{ marginTop: 10 }} />

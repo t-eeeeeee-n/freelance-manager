@@ -2,6 +2,7 @@
 import React from 'react'
 import { upsertTaxSettings } from './actions'
 import { useToast } from '@/components/toast'
+import { CustomSelect } from '@/components/custom-select'
 import type { TaxSettings } from '@/lib/types'
 
 const D = {
@@ -14,6 +15,7 @@ export function TaxSettingsUI({ settings }: { settings: TaxSettings | null }) {
   const toast = useToast()
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [filingType, setFilingType] = React.useState(settings?.filing_type ?? 'blue')
   const formRef = React.useRef<HTMLFormElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,10 +43,9 @@ export function TaxSettingsUI({ settings }: { settings: TaxSettings | null }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div className="field">
           <label>申告区分</label>
-          <select className="select" name="filing_type" defaultValue={settings?.filing_type ?? 'blue'}>
-            <option value="blue">青色申告</option>
-            <option value="white">白色申告</option>
-          </select>
+          <CustomSelect name="filing_type" value={filingType}
+            onChange={(v) => setFilingType(v as 'blue' | 'white')}
+            options={[{ value: 'blue', label: '青色申告' }, { value: 'white', label: '白色申告' }]} />
         </div>
         {numField('blue_deduction', '青色申告特別控除', '0 / 10万 / 55万 / 65万')}
         {numField('basic_deduction_income', '基礎控除（所得税）')}

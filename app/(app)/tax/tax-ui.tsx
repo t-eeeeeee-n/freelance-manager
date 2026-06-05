@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Icon } from '@/components/icon'
+import { CustomSelect } from '@/components/custom-select'
 import { calculateTax, type TaxParams } from '@/lib/tax'
 
 interface Props {
@@ -90,11 +91,9 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
           </div>
           <div className="field">
             <label>申告区分</label>
-            <select className="select" value={filingType}
-              onChange={(e) => setFilingType(e.target.value === 'white' ? 'white' : 'blue')}>
-              <option value="blue">青色申告</option>
-              <option value="white">白色申告</option>
-            </select>
+            <CustomSelect value={filingType}
+              onChange={(v) => setFilingType(v === 'white' ? 'white' : 'blue')}
+              options={[{ value: 'blue', label: '青色申告' }, { value: 'white', label: '白色申告' }]} />
           </div>
           <div className="field">
             <label>その他所得控除</label>
