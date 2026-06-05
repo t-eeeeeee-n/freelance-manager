@@ -7,6 +7,7 @@ import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
 import { BillingChip } from '@/components/page-chrome'
 import { CustomSelect } from '@/components/custom-select'
+import { CustomDatePicker } from '@/components/custom-date-picker'
 
 type BT = 'hourly' | 'monthly_minimum' | 'fixed'
 
@@ -98,6 +99,8 @@ function ContractForm({ mode, record, clients, onSave, onCancel }: {
 }) {
   const [bt, setBt] = React.useState<BT>((record?.billing_type as BT) ?? 'hourly')
   const [clientId, setClientId] = React.useState(record?.client_id ?? '')
+  const [startDate, setStartDate] = React.useState(record?.start_date ?? '')
+  const [endDate, setEndDate] = React.useState(record?.end_date ?? '')
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
   const formRef = React.useRef<HTMLFormElement>(null)
@@ -161,10 +164,10 @@ function ContractForm({ mode, record, clients, onSave, onCancel }: {
           </Field>
         )}
         <Field label="開始日">
-          <input className="input" type="date" name="start_date" defaultValue={record?.start_date ?? ''} />
+          <CustomDatePicker name="start_date" value={startDate} onChange={setStartDate} placeholder="未選択" />
         </Field>
         <Field label="終了日" hint="未入力なら継続中">
-          <input className="input" type="date" name="end_date" defaultValue={record?.end_date ?? ''} />
+          <CustomDatePicker name="end_date" value={endDate} onChange={setEndDate} placeholder="未選択（継続中）" />
         </Field>
         <Field label="源泉徴収" hint="この契約の請求に源泉徴収が発生する場合にオン">
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>

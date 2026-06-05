@@ -5,6 +5,7 @@ import { createExpense, updateExpense, deleteExpense, copyRecurringFromPrevMonth
 import { useEditor, Drawer, EditorShell, Field } from '@/components/drawer'
 import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
+import { CustomDatePicker } from '@/components/custom-date-picker'
 
 const EXP_CATS = ['wifi', 'rent', 'mobile', 'saas', 'travel', 'book', 'tax']
 const CAT_LABEL: Record<string, string> = { wifi: '通信(WiFi)', rent: '家賃', mobile: '携帯', saas: 'SaaS', travel: '交通費', book: '書籍', tax: '税理士' }
@@ -122,6 +123,7 @@ function ExpenseForm({ mode, record, defaultYm, onSave, onCancel }: {
   mode: 'create' | 'edit' | null; record: Expense | null; defaultYm: string
   onSave: (fd: FormData) => Promise<{ error: string | null }>; onCancel: () => void
 }) {
+  const [expenseDate, setExpenseDate] = React.useState(record?.expense_date ?? defaultYm + '-01')
   const [amount, setAmount] = React.useState(record?.amount ?? 0)
   const [rate, setRate] = React.useState(record?.allocation_rate ?? 1)
   const [isRecurring, setIsRecurring] = React.useState(record?.is_recurring ?? false)
@@ -145,7 +147,7 @@ function ExpenseForm({ mode, record, defaultYm, onSave, onCancel }: {
     <EditorShell mode={mode} title="経費" error={error} submitting={busy} onSubmit={submit} onCancel={onCancel}>
       <form ref={formRef} style={{ display: 'contents' }}>
         <Field label="日付" req>
-          <input className="input" type="date" name="expense_date" defaultValue={record?.expense_date ?? defaultYm + '-01'} required />
+          <CustomDatePicker name="expense_date" value={expenseDate} onChange={setExpenseDate} required />
         </Field>
         <Field label="カテゴリ" req hint="自由入力（候補から選択も可）">
           <input className="input" name="category" list="exp-cats" defaultValue={record?.category ?? ''} placeholder="wifi / rent / mobile …" required />

@@ -210,9 +210,16 @@ export function CustomDatePicker({
           )
         })}
       </div>
-      <button type="button" className="cdp__today-btn" onClick={() => { select(todayYMD); setViewYear(new Date().getFullYear()); setViewMonth(new Date().getMonth()) }}>
-        今日
-      </button>
+      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+        <button type="button" className="cdp__today-btn" style={{ marginTop: 0, flex: 1 }} onClick={() => { select(todayYMD); setViewYear(new Date().getFullYear()); setViewMonth(new Date().getMonth()) }}>
+          今日
+        </button>
+        {!required && value && (
+          <button type="button" className="cdp__today-btn" style={{ marginTop: 0, flex: 1 }} onClick={() => { onChange(''); setOpen(false) }}>
+            クリア
+          </button>
+        )}
+      </div>
     </div>,
     document.body
   ) : null

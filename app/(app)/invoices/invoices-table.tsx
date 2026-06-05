@@ -2,6 +2,7 @@
 import React from 'react'
 import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
+import { CustomDatePicker } from '@/components/custom-date-picker'
 import { markPaid, markUnpaid, updateDueDate, deleteInvoice } from './payment-actions'
 
 export interface InvoiceRow {
@@ -71,11 +72,7 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
                   <td className="ar num yen">{yen(inv.total_amount)}</td>
                   <td className="ar num">{inv.withholding_amount ? `▲${yen(inv.withholding_amount)}` : '—'}</td>
                   <td className="ar num yen" style={{ fontWeight: 600 }}>{yen(net)}</td>
-                  <td>
-                    <input className="input num" type="date" defaultValue={inv.due_date ?? ''}
-                      style={{ padding: '4px 8px', maxWidth: 150 }}
-                      onChange={(e) => onDue(inv, e.target.value)} />
-                  </td>
+                  <td><DueDateCell value={inv.due_date ?? ''} onSave={(v) => onDue(inv, v)} /></td>
                   <td>
                     {inv.status === 'paid'
                       ? <span className="chip chip--dot" style={{ color: 'var(--pos)' }}>入金済 {inv.paid_date ?? ''}</span>
@@ -97,6 +94,15 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+function DueDateCell({ value, onSave }: { value: string; onSave: (v: string) => void }) {
+  const [v, setV] = React.useState(value)
+  return (
+    <div style={{ maxWidth: 170 }}>
+      <CustomDatePicker value={v} onChange={(nv) => { setV(nv); onSave(nv) }} placeholder="期日未設定" />
     </div>
   )
 }
