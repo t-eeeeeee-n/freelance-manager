@@ -15,6 +15,8 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+/* リンクはブラウザ既定色（未訪問=青/訪問済=紫）を使わない。配色はクラス側で指定する。 */
+a { color: inherit; text-decoration: none; }
 
 /* ── 案C Panel tokens ── */
 [data-dir="c"] {
