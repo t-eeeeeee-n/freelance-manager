@@ -41,21 +41,26 @@ export function TaxSettingsUI({ settings }: { settings: TaxSettings | null }) {
     <form ref={formRef} onSubmit={handleSubmit} style={{ maxWidth: 520 }}>
       {error && <div className="errbox" style={{ marginBottom: 16 }}>{error}</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', fontSize: 'var(--small)', color: 'var(--text-dim)', lineHeight: 1.7 }}>
+          ここは<strong>税金の計算ルール</strong>の設定です。売上・経費はここには入れません（試算画面で「対象年」の記録から自動集計されます）。<br />
+          値は現行制度のデフォルトが入っており、<strong>基本はこのままでOK</strong>。必要に応じて「申告区分」「その他所得控除（iDeCo等）」、こだわるなら「国保 率」を自分に合わせてください。
+        </div>
         <div className="field">
           <label>申告区分</label>
           <CustomSelect name="filing_type" value={filingType}
             onChange={(v) => setFilingType(v as 'blue' | 'white')}
             options={[{ value: 'blue', label: '青色申告' }, { value: 'white', label: '白色申告' }]} />
+          <span style={{ fontSize: 'var(--small)', color: 'var(--text-faint)' }}>青色（複式簿記+e-Taxで65万控除）か白色か</span>
         </div>
-        {numField('blue_deduction', '青色申告特別控除', '0 / 10万 / 55万 / 65万')}
-        {numField('basic_deduction_income', '基礎控除（所得税）')}
-        {numField('basic_deduction_resident', '基礎控除（住民税）')}
-        {numField('national_pension_annual', '国民年金（年額）')}
-        {numField('health_insurance_rate', '国保 所得比例分の率', '自治体差が大きい概算', '0.01')}
-        {numField('health_insurance_fixed', '国保 定額分（均等割等）')}
-        {numField('resident_tax_rate', '住民税 所得割の率', undefined, '0.01')}
-        {numField('resident_tax_fixed', '住民税 均等割（定額）')}
-        {numField('other_deductions', 'その他所得控除', 'iDeCo・小規模企業共済など')}
+        {numField('blue_deduction', '青色申告特別控除', '青色: 65万/55万/10万 ・ 白色: 0')}
+        {numField('basic_deduction_income', '基礎控除（所得税）', '法定値。通常そのまま')}
+        {numField('basic_deduction_resident', '基礎控除（住民税）', '法定値。通常そのまま')}
+        {numField('national_pension_annual', '国民年金（年額）', '年額の概算。通常そのまま')}
+        {numField('health_insurance_rate', '国保 所得比例分の率', '自治体差大。市区町村の料率に合わせると精度↑', '0.01')}
+        {numField('health_insurance_fixed', '国保 定額分（均等割等）', '自治体差あり・概算')}
+        {numField('resident_tax_rate', '住民税 所得割の率', '概ね10%。通常そのまま', '0.01')}
+        {numField('resident_tax_fixed', '住民税 均等割（定額）', '概ね5,000円')}
+        {numField('other_deductions', 'その他所得控除', 'iDeCo・小規模企業共済・各種保険料控除など年額。無ければ0')}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <button type="submit" className="btn btn--primary" disabled={busy}>
             {busy ? '保存中…' : '保存する'}
