@@ -22,6 +22,10 @@ export async function upsertTaxSettings(formData: FormData) {
     resident_tax_rate: num('resident_tax_rate', 0.10),
     resident_tax_fixed: num('resident_tax_fixed', 5000),
     other_deductions: num('other_deductions', 0),
+    withholding_rate: num('withholding_rate', 0.1021),
+    withholding_rate_high: num('withholding_rate_high', 0.2042),
+    employment_type: String(formData.get('employment_type') ?? 'freelance') === 'salaried' ? 'salaried' : 'freelance',
+    salary_income: num('salary_income', 0),
   }
 
   const supabase = await createClient()
