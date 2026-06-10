@@ -65,6 +65,7 @@ export interface Invoice {
 }
 
 export type TaxFilingType = 'blue' | 'white'
+export type EmploymentType = 'freelance' | 'salaried'
 
 export interface TaxSettings {
   id: string
@@ -80,4 +81,6 @@ export interface TaxSettings {
   other_deductions: number
   withholding_rate: number
   withholding_rate_high: number
+  employment_type: EmploymentType
+  salary_income: number
 }
