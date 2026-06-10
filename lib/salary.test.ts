@@ -20,11 +20,17 @@ describe('calcSalaryDeduction（給与所得控除額）', () => {
   it('3,000,000円 → 控除 980,000', () => {
     expect(calcSalaryDeduction(3_000_000)).toBe(980_000)
   })
+  it('3,600,000円 → 控除 1,160,000（第3段上限）', () => {
+    expect(calcSalaryDeduction(3_600_000)).toBe(1_160_000) // 3,600,000*0.3+80,000
+  })
   it('3,600,001円 → 控除 20%+44万（第4段）', () => {
     expect(calcSalaryDeduction(3_600_001)).toBe(Math.round(3_600_001 * 0.2 + 440_000))
   })
   it('5,000,000円 → 控除 1,440,000', () => {
     expect(calcSalaryDeduction(5_000_000)).toBe(1_440_000)
+  })
+  it('6,600,000円 → 控除 1,760,000（第4段上限）', () => {
+    expect(calcSalaryDeduction(6_600_000)).toBe(1_760_000) // 6,600,000*0.2+440,000
   })
   it('6,600,001円 → 控除 10%+110万（第5段）', () => {
     expect(calcSalaryDeduction(6_600_001)).toBe(Math.round(6_600_001 * 0.1 + 1_100_000))
