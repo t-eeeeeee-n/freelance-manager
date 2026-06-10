@@ -1,4 +1,5 @@
 import type { TaxFilingType } from './types'
+import { calcSalaryIncome, calcSalaryDeduction } from './salary'
 
 export interface TaxParams {
   filingType: TaxFilingType
@@ -18,6 +19,8 @@ export interface TaxInput {
   annualExpense: number
   annualWithholding?: number
   params: TaxParams
+  employmentType?: 'freelance' | 'salaried'  // default 'freelance'
+  salaryIncome?: number                       // 給与ありモード: 給与収入年額見込み
 }
 
 export interface TaxResult {
@@ -31,6 +34,10 @@ export interface TaxResult {
   residentTax: number               // 住民税
   totalTaxAndInsurance: number      // 税・保険合計
   netIncome: number                 // 手取り（年・可処分）
+  // 給与ありモード専用（専業モードでは全て 0）
+  salaryIncome: number      // 入力された給与収入
+  salaryDeduction: number   // 給与所得控除額
+  salaryEarnings: number    // 給与所得（収入 − 控除）
   withholding: number          // 源泉徴収合計（前払い所得税）
   incomeTaxDue: number         // 確定申告での追加納付（max(所得税 - 源泉, 0)）
   incomeTaxRefund: number      // 還付見込み（max(源泉 - 所得税, 0)）
@@ -83,6 +90,11 @@ export function calculateTax(input: TaxInput): TaxResult {
   const { annualRevenue, annualExpense, params: p } = input
   const withholding = input.annualWithholding ?? 0
 
+  const isSalaried = (input.employmentType ?? 'freelance') === 'salaried'
+  const salaryRev = input.salaryIncome ?? 0
+  const salaryDed = isSalaried ? calcSalaryDeduction(salaryRev) : 0
+  const salaryEarnings = isSalaried ? calcSalaryIncome(salaryRev) : 0
+
   const blue = p.filingType === 'blue' ? p.blueDeduction : 0
   const businessIncome = Math.max(annualRevenue - annualExpense - blue, 0)
 
@@ -99,24 +111,53 @@ export function calculateTax(input: TaxInput): TaxResult {
       taxableIncomeResident: 0,
       residentTax: 0,
       totalTaxAndInsurance: 0, netIncome,
+      salaryIncome: 0, salaryDeduction: 0, salaryEarnings: 0,
       withholding: 0, incomeTaxDue: 0, incomeTaxRefund: 0,
       reserve: buildReserve(0, netIncome, annualRevenue, 0),
     }
   }
 
-  const nationalPension = p.nationalPensionAnnual
-  const healthInsurance = Math.round(businessIncome * p.healthInsuranceRate) + p.healthInsuranceFixed
+  // 給与ありモード: 勤務先の健保・厚生年金に加入済みのため国保・年金は 0
+  const nationalPension = isSalaried ? 0 : p.nationalPensionAnnual
+  const healthInsurance = isSalaried ? 0 : Math.round(businessIncome * p.healthInsuranceRate) + p.healthInsuranceFixed
+  // 給与ありモード: 給与の社保（厚生年金9.15%＋健保5% ≈ 14.15%）を概算控除
+  const salarySocialInsurance = isSalaried ? Math.round(salaryRev * 0.1415) : 0
   const socialInsuranceDeduction = nationalPension + healthInsurance
 
-  const taxableIncomeIncomeTax = Math.max(
-    businessIncome - socialInsuranceDeduction - p.basicDeductionIncome - p.otherDeductions, 0,
-  )
-  const incomeTax = Math.round(progressiveIncomeTax(taxableIncomeIncomeTax) * 1.021) // 復興特別所得税
+  let incomeTax: number
+  let taxableIncomeIncomeTax: number
+  if (isSalaried) {
+    const taxableTotal = Math.max(
+      salaryEarnings + businessIncome - salarySocialInsurance - p.basicDeductionIncome - p.otherDeductions, 0,
+    )
+    const taxableSalaryOnly = Math.max(
+      salaryEarnings - salarySocialInsurance - p.basicDeductionIncome, 0,
+    )
+    incomeTax = Math.max(
+      Math.round(progressiveIncomeTax(taxableTotal) * 1.021) -
+      Math.round(progressiveIncomeTax(taxableSalaryOnly) * 1.021),
+      0,
+    )
+    taxableIncomeIncomeTax = taxableTotal
+  } else {
+    taxableIncomeIncomeTax = Math.max(
+      businessIncome - socialInsuranceDeduction - p.basicDeductionIncome - p.otherDeductions, 0,
+    )
+    incomeTax = Math.round(progressiveIncomeTax(taxableIncomeIncomeTax) * 1.021)
+  }
 
-  const taxableIncomeResident = Math.max(
-    businessIncome - socialInsuranceDeduction - p.basicDeductionResident - p.otherDeductions, 0,
-  )
-  const residentTax = Math.round(taxableIncomeResident * p.residentTaxRate) + p.residentTaxFixed
+  let taxableIncomeResident: number
+  let residentTax: number
+  if (isSalaried) {
+    // 副業分の所得割のみ（均等割は給与の特別徴収で支払済み）
+    taxableIncomeResident = businessIncome
+    residentTax = Math.round(businessIncome * p.residentTaxRate)
+  } else {
+    taxableIncomeResident = Math.max(
+      businessIncome - socialInsuranceDeduction - p.basicDeductionResident - p.otherDeductions, 0,
+    )
+    residentTax = Math.round(taxableIncomeResident * p.residentTaxRate) + p.residentTaxFixed
+  }
 
   const totalTaxAndInsurance = incomeTax + residentTax + nationalPension + healthInsurance
   const netIncome = annualRevenue - annualExpense - totalTaxAndInsurance
@@ -135,6 +176,9 @@ export function calculateTax(input: TaxInput): TaxResult {
     residentTax,
     totalTaxAndInsurance,
     netIncome,
+    salaryIncome: salaryRev,
+    salaryDeduction: salaryDed,
+    salaryEarnings,
     withholding,
     incomeTaxDue,
     incomeTaxRefund,

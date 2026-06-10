@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { progressiveIncomeTax, calculateTax, DEFAULT_TAX_PARAMS } from './tax'
+import { calcSalaryIncome, calcSalaryDeduction } from './salary'
 
 describe('progressiveIncomeTax（所得税本体・復興税抜き）', () => {
   it('課税所得0 → 0', () => {
@@ -139,5 +140,93 @@ describe('calculateTax', () => {
     expect(r.withholding).toBe(0)
     expect(r.incomeTaxDue).toBe(0)
     expect(r.incomeTaxRefund).toBe(0)
+  })
+})
+
+describe('calculateTax — 給与ありモード（副業）', () => {
+  const p = DEFAULT_TAX_PARAMS
+
+  it('employmentType 省略 → 専業モードと同一（後方互換）', () => {
+    const a = calculateTax({ annualRevenue: 3_000_000, annualExpense: 500_000, params: p })
+    const b = calculateTax({ annualRevenue: 3_000_000, annualExpense: 500_000, params: p, employmentType: 'freelance' })
+    expect(a.incomeTax).toBe(b.incomeTax)
+    expect(a.nationalPension).toBe(b.nationalPension)
+    expect(a.totalTaxAndInsurance).toBe(b.totalTaxAndInsurance)
+    expect(a.salaryIncome).toBe(0)
+    expect(a.salaryDeduction).toBe(0)
+    expect(a.salaryEarnings).toBe(0)
+  })
+
+  it('給与ありモード: 国保・年金は 0', () => {
+    const r = calculateTax({
+      annualRevenue: 1_000_000, annualExpense: 200_000, params: p,
+      employmentType: 'salaried', salaryIncome: 5_000_000,
+    })
+    expect(r.nationalPension).toBe(0)
+    expect(r.healthInsurance).toBe(0)
+    expect(r.socialInsuranceDeduction).toBe(0)
+  })
+
+  it('給与ありモード: salaryEarnings を TaxResult に返す', () => {
+    const r = calculateTax({
+      annualRevenue: 1_000_000, annualExpense: 200_000, params: p,
+      employmentType: 'salaried', salaryIncome: 5_000_000,
+    })
+    expect(r.salaryIncome).toBe(5_000_000)
+    expect(r.salaryDeduction).toBe(calcSalaryDeduction(5_000_000))  // 1,440,000
+    expect(r.salaryEarnings).toBe(calcSalaryIncome(5_000_000))      // 3,560,000
+  })
+
+  it('給与ありモード: 住民税は事業所得×residentTaxRateのみ（均等割なし）', () => {
+    // 副業売上100万・経費20万・青色65万 → 事業所得15万
+    const r = calculateTax({
+      annualRevenue: 1_000_000, annualExpense: 200_000, params: p,
+      employmentType: 'salaried', salaryIncome: 5_000_000,
+    })
+    const businessIncome = Math.max(1_000_000 - 200_000 - 650_000, 0)  // 150,000
+    expect(r.residentTax).toBe(Math.round(businessIncome * p.residentTaxRate))  // 15,000（均等割 5,000 は含まない）
+    expect(r.residentTax).toBe(15_000)
+  })
+
+  it('給与ありモード: 所得税は合算課税所得の限界税率差分', () => {
+    // 給与500万・副業売上100万・経費20万・青色65万 → 事業所得15万
+    // 給与所得: 3,560,000。給与社保概算: round(5,000,000*0.1415)=707,500
+    // 給与のみ課税所得: max(3,560,000-707,500-480,000,0) = 2,372,500
+    // 合算課税所得: max(3,560,000+150,000-707,500-480,000,0) = 2,522,500
+    const sEarnings = calcSalaryIncome(5_000_000)    // 3,560,000
+    const salaryIns = Math.round(5_000_000 * 0.1415)  // 707,500
+    const biz = Math.max(1_000_000 - 200_000 - 650_000, 0)  // 150,000
+    const taxableTotal   = Math.max(sEarnings + biz - salaryIns - p.basicDeductionIncome - p.otherDeductions, 0)
+    const taxableSalOnly = Math.max(sEarnings - salaryIns - p.basicDeductionIncome, 0)
+    const expectedTax = Math.max(
+      Math.round(progressiveIncomeTax(taxableTotal) * 1.021) -
+      Math.round(progressiveIncomeTax(taxableSalOnly) * 1.021),
+      0,
+    )
+    const r = calculateTax({
+      annualRevenue: 1_000_000, annualExpense: 200_000, params: p,
+      employmentType: 'salaried', salaryIncome: 5_000_000,
+    })
+    expect(r.incomeTax).toBe(expectedTax)
+    expect(r.incomeTax).toBeGreaterThan(0)
+  })
+
+  it('給与ありモード: 事業所得0→全て0（ゲート維持）', () => {
+    const r = calculateTax({
+      annualRevenue: 0, annualExpense: 0, params: p,
+      employmentType: 'salaried', salaryIncome: 5_000_000,
+    })
+    expect(r.totalTaxAndInsurance).toBe(0)
+    expect(r.incomeTax).toBe(0)
+    expect(r.nationalPension).toBe(0)
+    expect(r.salaryIncome).toBe(0)
+  })
+
+  it('給与ありモード: netIncome = 売上 − 経費 − (追加所得税 + 追加住民税)', () => {
+    const r = calculateTax({
+      annualRevenue: 1_000_000, annualExpense: 200_000, params: p,
+      employmentType: 'salaried', salaryIncome: 5_000_000,
+    })
+    expect(r.netIncome).toBe(1_000_000 - 200_000 - r.totalTaxAndInsurance)
   })
 })
