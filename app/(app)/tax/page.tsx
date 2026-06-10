@@ -67,6 +67,8 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
       params={settingsParams}
       withholdingActual={withholdingActual}
       withholdingProjected={withholdingProjected}
+      employmentType={settings?.employment_type ?? 'freelance'}
+      salaryIncome={settings?.salary_income ?? 0}
     />
   )
 }

@@ -13,11 +13,13 @@ interface Props {
   params: TaxParams
   withholdingActual: number
   withholdingProjected: number
+  employmentType: 'freelance' | 'salaried'
+  salaryIncome: number
 }
 
 const yen = (n: number) => Math.round(n).toLocaleString('ja-JP')
 
-export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, params, withholdingActual, withholdingProjected }: Props) {
+export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, params, withholdingActual, withholdingProjected, employmentType, salaryIncome }: Props) {
   // what-if 用の一時上書き（保存しない）
   const [basis, setBasis] = React.useState<'actual' | 'projected'>('projected')
   const basisRevenue = basis === 'projected' ? projectedRevenue : actualRevenue
@@ -26,6 +28,8 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
   const [expense, setExpense] = React.useState(annualExpense)
   const [filingType, setFilingType] = React.useState(params.filingType)
   const [otherDeductions, setOtherDeductions] = React.useState(params.otherDeductions)
+  const [empType, setEmpType] = React.useState<'freelance' | 'salaried'>(employmentType)
+  const [salaryRev, setSalaryRev] = React.useState(salaryIncome)
 
   const onBasis = (b: 'actual' | 'projected') => {
     setBasis(b)
@@ -38,23 +42,34 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
       annualExpense: expense,
       annualWithholding: basisWithholding,
       params: { ...params, filingType, otherDeductions },
+      employmentType: empType,
+      salaryIncome: salaryRev,
     }),
-    [revenue, expense, filingType, otherDeductions, params, basisWithholding],
+    [revenue, expense, filingType, otherDeductions, params, basisWithholding, empType, salaryRev],
   )
 
   const dirty = revenue !== basisRevenue || expense !== annualExpense
     || filingType !== params.filingType || otherDeductions !== params.otherDeductions
+    || empType !== employmentType || salaryRev !== salaryIncome
 
-  const rows: [string, number][] = [
-    ['事業所得', result.businessIncome],
-    ['国民年金', result.nationalPension],
-    ['国民健康保険', result.healthInsurance],
-    ['課税所得（所得税）', result.taxableIncomeIncomeTax],
-    ['所得税（復興税込み）', result.incomeTax],
-    ['課税所得（住民税）', result.taxableIncomeResident],
-    ['住民税', result.residentTax],
-    ['源泉徴収（前払い所得税）', result.withholding],
-  ]
+  const rows: [string, number][] = empType === 'salaried'
+    ? [
+        ['給与所得', result.salaryEarnings],
+        ['事業所得（副業）', result.businessIncome],
+        ['副業による追加所得税', result.incomeTax],
+        ['副業による追加住民税', result.residentTax],
+        ['源泉徴収（前払い所得税）', result.withholding],
+      ]
+    : [
+        ['事業所得', result.businessIncome],
+        ['国民年金', result.nationalPension],
+        ['国民健康保険', result.healthInsurance],
+        ['課税所得（所得税）', result.taxableIncomeIncomeTax],
+        ['所得税（復興税込み）', result.incomeTax],
+        ['課税所得（住民税）', result.taxableIncomeResident],
+        ['住民税', result.residentTax],
+        ['源泉徴収（前払い所得税）', result.withholding],
+      ]
 
   return (
     <div className="page">
@@ -80,6 +95,15 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
       <div className="tablecard" style={{ padding: 16, marginBottom: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
           <div className="field">
+            <label>就業形態</label>
+            <CustomSelect value={empType}
+              onChange={(v) => setEmpType(v as 'freelance' | 'salaried')}
+              options={[
+                { value: 'freelance', label: '専業フリーランス' },
+                { value: 'salaried', label: '給与あり（副業）' },
+              ]} />
+          </div>
+          <div className="field">
             <label>年間売上（お試し上書き）</label>
             <input className="input num" type="number" value={revenue}
               onChange={(e) => setRevenue(Number(e.target.value) || 0)} />
@@ -100,6 +124,13 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
             <input className="input num" type="number" value={otherDeductions}
               onChange={(e) => setOtherDeductions(Number(e.target.value) || 0)} />
           </div>
+          {empType === 'salaried' && (
+            <div className="field">
+              <label>本業の給与収入（お試し上書き）</label>
+              <input className="input num" type="number" value={salaryRev}
+                onChange={(e) => setSalaryRev(Number(e.target.value) || 0)} />
+            </div>
+          )}
         </div>
         <p style={{ fontSize: 'var(--small)', color: 'var(--text-faint)', marginTop: 12 }}>
           ここでの変更は保存されません（お試し計算）。確定値は
@@ -108,6 +139,7 @@ export function TaxUI({ year, actualRevenue, projectedRevenue, annualExpense, pa
         </p>
         <p style={{ fontSize: 'var(--small)', color: 'var(--text-faint)', marginTop: 6 }}>
           着地見込みは売上のみ年換算し、経費・源泉徴収は実績ベースです。そのため年の途中ほど税・取り置きは高め（取りすぎ方向）に出ます。売上を手動上書きしても源泉年額は基準値のまま固定です。
+          {empType === 'salaried' && ' 給与ありモード: 副業分の追加税のみ表示。本業の年末調整済み税額は含みません。'}
         </p>
       </div>
 
