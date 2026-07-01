@@ -57,6 +57,7 @@ export interface Invoice {
   year_month: string
   issue_date: string
   total_amount: number
+  consumption_tax: number
   memo: string | null
   status: InvoiceStatus
   paid_date: string | null

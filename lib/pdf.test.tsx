@@ -24,6 +24,26 @@ describe('renderInvoicePdf', () => {
     expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('%PDF')
   }, 30000)
 
+  it('消費税あり・構造化した振込先でもPDFを生成できる', async () => {
+    const bytes = await renderInvoicePdf({
+      invoiceNo: '2026-06-003', issueDate: '2026-07-01', yearMonth: '2026-06',
+      clientName: 'テスト株式会社',
+      rows: [{
+        clientId: 'c1', contractId: 'ct1', contractName: 'CMS開発',
+        billingType: 'hourly', workedHours: 113, minimumHours: null,
+        billableHours: 113, baseRate: 4000, overtimeRate: null, amount: 452000,
+      }],
+      totalAmount: 452000, consumptionTax: 45200,
+      profile: {
+        display_name: '荒井天匠', address: '東京', email: 'a@b.c', phone: '090',
+        bank_name: '三井住友銀行', bank_branch: '桶川支店',
+        account_type: '普通', account_number: '7476613', account_holder: 'アライ　テンショウ',
+      },
+    })
+    expect(bytes.length).toBeGreaterThan(1000)
+    expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('%PDF')
+  }, 30000)
+
   it('源泉徴収ありでもPDFを生成できる', async () => {
     const bytes = await renderInvoicePdf({
       invoiceNo: '2026-06-002', issueDate: '2026-06-30', yearMonth: '2026-06',

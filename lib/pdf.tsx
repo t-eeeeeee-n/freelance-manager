@@ -36,7 +36,8 @@ export interface InvoiceData {
   yearMonth: string
   clientName: string
   rows: SummaryRow[]
-  totalAmount: number
+  totalAmount: number          // 税抜（報酬）小計
+  consumptionTax?: number      // 消費税額（税別契約で上乗せ）
   withholdingAmount?: number
   memo?: string
   profile: {
@@ -44,13 +45,31 @@ export interface InvoiceData {
     address: string | null
     email: string | null
     phone: string | null
-    bank_info: string | null
+    bank_name?: string | null
+    bank_branch?: string | null
+    account_type?: string | null
+    account_number?: string | null
+    account_holder?: string | null
+    bank_info?: string | null   // 旧・自由記述フォールバック
   }
 }
 
 export function InvoiceDocument({ data }: { data: InvoiceData }) {
   const [y, m] = data.yearMonth.split('-')
   const ymLabel = `${y}年${Number(m)}月`
+
+  const subtotal = data.totalAmount
+  const tax = data.consumptionTax ?? 0
+  const wh = data.withholdingAmount ?? 0
+  const hasBreakdown = tax > 0 || wh > 0
+  const grandTotal = subtotal + tax - wh
+
+  const p = data.profile
+  const bankLine1 = [p.bank_name, p.bank_branch].filter(Boolean).join(' ')
+  const bankLine2 = [p.account_type, p.account_number].filter(Boolean).join(' ')
+  const hasStructuredBank = Boolean(bankLine1 || bankLine2 || p.account_holder)
+  const hasBank = hasStructuredBank || Boolean(p.bank_info)
+
   return (
     <Document title={`請求書 ${data.invoiceNo}`}>
       <Page size="A4" style={S.page}>
@@ -90,33 +109,49 @@ export function InvoiceDocument({ data }: { data: InvoiceData }) {
               <Text style={{ flex: 1, textAlign: 'right' }}>{yen(r.amount)}</Text>
             </View>
           ))}
-          {data.withholdingAmount && data.withholdingAmount > 0 ? (
-            <>
-              <View style={S.totalRow}>
-                <Text style={[S.bold, { flex: 4 }]}>小計</Text>
-                <Text style={[S.bold, { flex: 1, textAlign: 'right' }]}>{yen(data.totalAmount)}</Text>
-              </View>
-              <View style={S.row}>
-                <Text style={{ flex: 4 }}>源泉徴収税額</Text>
-                <Text style={{ flex: 1, textAlign: 'right' }}>▲{yen(data.withholdingAmount)}</Text>
-              </View>
-              <View style={S.totalRow}>
-                <Text style={[S.bold, { flex: 4 }]}>差引請求額</Text>
-                <Text style={[S.bold, { flex: 1, textAlign: 'right', fontSize: 13 }]}>{yen(data.totalAmount - data.withholdingAmount)}</Text>
-              </View>
-            </>
-          ) : (
+          {!hasBreakdown ? (
             <View style={S.totalRow}>
               <Text style={[S.bold, { flex: 4 }]}>合計</Text>
-              <Text style={[S.bold, { flex: 1, textAlign: 'right', fontSize: 13 }]}>{yen(data.totalAmount)}</Text>
+              <Text style={[S.bold, { flex: 1, textAlign: 'right', fontSize: 13 }]}>{yen(subtotal)}</Text>
             </View>
+          ) : (
+            <>
+              <View style={S.totalRow}>
+                <Text style={[S.bold, { flex: 4 }]}>小計（税抜）</Text>
+                <Text style={[S.bold, { flex: 1, textAlign: 'right' }]}>{yen(subtotal)}</Text>
+              </View>
+              {tax > 0 ? (
+                <View style={S.row}>
+                  <Text style={{ flex: 4 }}>消費税（10%）</Text>
+                  <Text style={{ flex: 1, textAlign: 'right' }}>{yen(tax)}</Text>
+                </View>
+              ) : null}
+              {wh > 0 ? (
+                <View style={S.row}>
+                  <Text style={{ flex: 4 }}>源泉徴収税額</Text>
+                  <Text style={{ flex: 1, textAlign: 'right' }}>▲{yen(wh)}</Text>
+                </View>
+              ) : null}
+              <View style={S.totalRow}>
+                <Text style={[S.bold, { flex: 4 }]}>{wh > 0 ? '差引請求額' : '合計（税込）'}</Text>
+                <Text style={[S.bold, { flex: 1, textAlign: 'right', fontSize: 13 }]}>{yen(grandTotal)}</Text>
+              </View>
+            </>
           )}
         </View>
 
-        {data.profile.bank_info ? (
+        {hasBank ? (
           <View style={[S.section, { marginTop: 20 }]}>
             <Text style={S.h2}>振込先</Text>
-            <Text style={S.meta}>{data.profile.bank_info}</Text>
+            {hasStructuredBank ? (
+              <>
+                {bankLine1 ? <Text style={S.meta}>{bankLine1}</Text> : null}
+                {bankLine2 ? <Text style={S.meta}>{bankLine2}</Text> : null}
+                {p.account_holder ? <Text style={S.meta}>名義 {p.account_holder}</Text> : null}
+              </>
+            ) : (
+              <Text style={S.meta}>{p.bank_info}</Text>
+            )}
           </View>
         ) : null}
 

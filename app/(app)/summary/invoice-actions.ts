@@ -6,12 +6,9 @@ import { renderInvoicePdf } from '@/lib/pdf'
 import { calcWithholding } from '@/lib/withholding'
 import type { Contract, WorkLog } from '@/lib/types'
 
-function composeBankInfo(p: { bank_name?: string | null; bank_branch?: string | null; account_type?: string | null; account_number?: string | null; account_holder?: string | null; bank_info?: string | null } | null): string | null {
-  if (!p) return null
-  const parts = [p.bank_name, p.bank_branch, p.account_type, p.account_number, p.account_holder].filter(Boolean)
-  if (parts.length > 0) return parts.join(' ')
-  return p.bank_info ?? null  // legacy fallback
-}
+// 消費税率（税別契約の上乗せ分）。全案件を税別・標準税率10%として扱う。
+// 税込・軽減税率のクライアントが出た場合はここを契約/設定ベースに切り替える。
+const CONSUMPTION_TAX_RATE = 0.1
 
 export async function generateInvoicePdf(clientId: string, yearMonth: string, memo?: string) {
   if (!/^\d{4}-\d{2}$/.test(yearMonth)) return { error: '年月の形式が正しくありません' }
@@ -43,6 +40,8 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
   const whContractIds = new Set(((contracts ?? []) as Contract[]).filter((c) => c.withholding).map((c) => c.id))
   const withholdingBase = billableRows.filter((r) => whContractIds.has(r.contractId)).reduce((s, r) => s + r.amount, 0)
   const withholdingAmount = calcWithholding(withholdingBase, whRate, whRateHigh)
+  // 消費税は税抜報酬（小計）に対して計算。1円未満切り捨て。
+  const consumptionTax = Math.floor(totalAmount * CONSUMPTION_TAX_RATE)
 
   const { data: existingInvoices } = await supabase.from('invoices').select('invoice_no').eq('year_month', yearMonth)
   const existingNos = ((existingInvoices ?? []) as { invoice_no: string }[]).map(i => i.invoice_no)
@@ -62,6 +61,7 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
     clientName: clientData.name,
     rows: billableRows,
     totalAmount,
+    consumptionTax,
     withholdingAmount,
     memo,
     profile: {
@@ -70,7 +70,12 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
         .filter(Boolean).join(' ') || null,
       email: profile?.email ?? null,
       phone: profile?.phone ?? null,
-      bank_info: composeBankInfo(profile),
+      bank_name: profile?.bank_name ?? null,
+      bank_branch: profile?.bank_branch ?? null,
+      account_type: profile?.account_type ?? null,
+      account_number: profile?.account_number ?? null,
+      account_holder: profile?.account_holder ?? null,
+      bank_info: profile?.bank_info ?? null,  // 旧・自由記述フォールバック
     },
   })
 
@@ -80,6 +85,7 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
     year_month: yearMonth,
     issue_date: issueDate,
     total_amount: totalAmount,
+    consumption_tax: consumptionTax,
     withholding_amount: withholdingAmount,
     memo: memo ?? null,
     due_date: dueDate,

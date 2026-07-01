@@ -11,6 +11,7 @@ export interface InvoiceRow {
   year_month: string
   issue_date: string
   total_amount: number
+  consumption_tax: number
   withholding_amount: number
   status: 'unpaid' | 'paid'
   paid_date: string | null
@@ -63,13 +64,14 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
             )}
             {invoices.map((inv) => {
               const overdue = inv.status === 'unpaid' && inv.due_date != null && inv.due_date < today()
-              const net = inv.total_amount - (inv.withholding_amount ?? 0)
+              const gross = inv.total_amount + (inv.consumption_tax ?? 0)  // 税込請求額
+              const net = gross - (inv.withholding_amount ?? 0)            // 源泉差引後の手取り
               return (
                 <tr key={inv.id}>
                   <td className="num" style={{ fontWeight: 600 }}>{inv.invoice_no}</td>
                   <td>{inv.clients?.name ?? '—'}</td>
                   <td className="num">{inv.year_month}</td>
-                  <td className="ar num yen">{yen(inv.total_amount)}</td>
+                  <td className="ar num yen">{yen(gross)}</td>
                   <td className="ar num">{inv.withholding_amount ? `▲${yen(inv.withholding_amount)}` : '—'}</td>
                   <td className="ar num yen" style={{ fontWeight: 600 }}>{yen(net)}</td>
                   <td><DueDateCell value={inv.due_date ?? ''} onSave={(v) => onDue(inv, v)} /></td>
