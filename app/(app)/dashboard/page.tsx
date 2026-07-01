@@ -18,7 +18,7 @@ export default async function DashboardPage() {
     supabase.from('work_logs').select('*').gte('work_date', monthStart).lte('work_date', monthEnd),
     supabase.from('expenses').select('allocated_amount').gte('expense_date', monthStart).lte('expense_date', monthEnd),
     supabase.from('clients').select('id, name'),
-    supabase.from('invoices').select('total_amount, due_date').eq('status', 'unpaid'),
+    supabase.from('invoices').select('total_amount, consumption_tax, withholding_amount, due_date').eq('status', 'unpaid'),
   ])
   const clientMap = Object.fromEntries(((clients ?? []) as { id: string; name: string }[]).map(c => [c.id, c.name]))
 
@@ -26,8 +26,9 @@ export default async function DashboardPage() {
     .reduce((s, e) => s + (e.allocated_amount ?? 0), 0)
 
   const today = new Date().toISOString().slice(0, 10)
-  const unpaidRows = (unpaid ?? []) as { total_amount: number; due_date: string | null }[]
-  const unpaidTotal = unpaidRows.reduce((s, r) => s + (r.total_amount ?? 0), 0)
+  const unpaidRows = (unpaid ?? []) as { total_amount: number; consumption_tax: number | null; withholding_amount: number | null; due_date: string | null }[]
+  // 未入金 = 実際に受け取る額（税込 − 源泉）
+  const unpaidTotal = unpaidRows.reduce((s, r) => s + (r.total_amount ?? 0) + (r.consumption_tax ?? 0) - (r.withholding_amount ?? 0), 0)
   const unpaidCount = unpaidRows.length
   const overdueCount = unpaidRows.filter((r) => r.due_date != null && r.due_date < today).length
 
