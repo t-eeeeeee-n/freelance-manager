@@ -126,6 +126,10 @@ export function InvoiceDocument({ data }: { data: InvoiceData }) {
             <Text style={S.meta}>{data.memo}</Text>
           </View>
         ) : null}
+
+        <View style={{ marginTop: 16 }}>
+          <Text style={S.meta}>※ 振込手数料はご負担いただきますようお願いいたします。</Text>
+        </View>
       </Page>
     </Document>
   )
