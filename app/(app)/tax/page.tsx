@@ -4,6 +4,7 @@ import { DEFAULT_TAX_PARAMS, type TaxParams } from '@/lib/tax'
 import { calcWithholding } from '@/lib/withholding'
 import type { Contract, WorkLog, Expense, TaxSettings } from '@/lib/types'
 import { TaxUI } from './tax-ui'
+import { currentYear, todayYMD } from '@/lib/ym'
 
 function toParams(s: TaxSettings | null): TaxParams {
   if (!s) return DEFAULT_TAX_PARAMS
@@ -23,7 +24,7 @@ function toParams(s: TaxSettings | null): TaxParams {
 
 export default async function TaxPage({ searchParams }: { searchParams: Promise<{ y?: string }> }) {
   const { y } = await searchParams
-  const year = Number(y) || new Date().getFullYear()
+  const year = Number(y) || currentYear()
   const yearStart = `${year}-01-01`
   const yearEnd = `${year}-12-31`
 
@@ -35,7 +36,7 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
     supabase.from('tax_settings').select('*').limit(1).maybeSingle(),
   ])
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayYMD()
   const projection = buildAnnualProjection(year, (contracts ?? []) as Contract[], (logs ?? []) as WorkLog[], today)
   const annualExpense = ((expenses ?? []) as Pick<Expense, 'allocated_amount'>[])
     .reduce((s, e) => s + (e.allocated_amount ?? 0), 0)

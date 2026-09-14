@@ -1,6 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { prevYm, monthRange } from '@/lib/ym'
 
 export async function createExpense(formData: FormData) {
   const expense_date = String(formData.get('expense_date') ?? '')
@@ -53,11 +54,8 @@ export async function deleteExpense(id: string) {
 
 export async function copyRecurringFromPrevMonth(targetYearMonth: string) {
   if (!/^\d{4}-\d{2}$/.test(targetYearMonth)) return { error: '年月の形式が正しくありません' }
-  const [y, m] = targetYearMonth.split('-').map(Number)
-  const prev = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`
-  const prevStart = `${prev}-01`
-  const prevEndDay = new Date(Number(prev.slice(0, 4)), Number(prev.slice(5, 7)), 0).getDate()
-  const prevEnd = `${prev}-${String(prevEndDay).padStart(2, '0')}`
+  const prev = prevYm(targetYearMonth)
+  const { start: prevStart, end: prevEnd } = monthRange(prev)
 
   const supabase = await createClient()
   const { data: recurring, error: selErr } = await supabase.from('expenses')

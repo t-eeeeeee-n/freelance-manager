@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer'
 import type { SummaryRow } from './summary'
+import { ymLabel } from './ym'
 
 // Server-side: resolve font from filesystem.
 const FONT_DIR = path.join(process.cwd(), 'public', 'fonts')
@@ -55,8 +56,7 @@ export interface InvoiceData {
 }
 
 export function InvoiceDocument({ data }: { data: InvoiceData }) {
-  const [y, m] = data.yearMonth.split('-')
-  const ymLabel = `${y}年${Number(m)}月`
+  const monthLabel = ymLabel(data.yearMonth)
 
   const subtotal = data.totalAmount
   const tax = data.consumptionTax ?? 0
@@ -78,7 +78,7 @@ export function InvoiceDocument({ data }: { data: InvoiceData }) {
           <View>
             <Text style={S.meta}>請求番号: {data.invoiceNo}</Text>
             <Text style={S.meta}>発行日: {data.issueDate}</Text>
-            <Text style={S.meta}>対象月: {ymLabel}</Text>
+            <Text style={S.meta}>対象月: {monthLabel}</Text>
           </View>
         </View>
 
