@@ -4,13 +4,11 @@ import type { Contract, WorkLog, Expense } from '@/lib/types'
 import { Icon } from '@/components/icon'
 import { BillingChip } from '@/components/page-chrome'
 import Link from 'next/link'
+import { currentYm, todayYMD, ymLabel, monthRange } from '@/lib/ym'
 
 export default async function DashboardPage() {
-  const yearMonth = new Date().toISOString().slice(0, 7)
-  const monthStart = `${yearMonth}-01`
-  const lastDay = new Date(Number(yearMonth.slice(0, 4)), Number(yearMonth.slice(5, 7)), 0).getDate()
-  const monthEnd = `${yearMonth}-${String(lastDay).padStart(2, '0')}`
-  const ymLabel = (ym: string) => { const [y, m] = ym.split('-'); return `${y}年${Number(m)}月` }
+  const yearMonth = currentYm()
+  const { start: monthStart, end: monthEnd } = monthRange(yearMonth)
 
   const supabase = await createClient()
   const [{ data: contracts }, { data: logs }, { data: expenses }, { data: clients }, { data: unpaid }] = await Promise.all([
@@ -25,7 +23,7 @@ export default async function DashboardPage() {
   const expenseTotal = ((expenses ?? []) as Pick<Expense, 'allocated_amount'>[])
     .reduce((s, e) => s + (e.allocated_amount ?? 0), 0)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayYMD()
   const unpaidRows = (unpaid ?? []) as { total_amount: number; consumption_tax: number | null; withholding_amount: number | null; due_date: string | null }[]
   // 未入金 = 実際に受け取る額（税込 − 源泉）
   const unpaidTotal = unpaidRows.reduce((s, r) => s + (r.total_amount ?? 0) + (r.consumption_tax ?? 0) - (r.withholding_amount ?? 0), 0)

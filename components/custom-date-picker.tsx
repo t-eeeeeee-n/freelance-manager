@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { createPortal } from 'react-dom'
+import { todayYMD } from '@/lib/ym'
 
 interface CustomDatePickerProps {
   value: string        // 'YYYY-MM-DD' or ''
@@ -12,6 +13,7 @@ interface CustomDatePickerProps {
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
+/** カレンダーのマス生成用。ローカルに構築したDateをそのまま文字列化する（TZ変換しない） */
 function toYMD(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
@@ -93,11 +95,11 @@ export function CustomDatePicker({
   const [open, setOpen] = React.useState(false)
   const [viewYear, setViewYear] = React.useState(() => {
     const d = parseYMD(value)
-    return d ? d.getFullYear() : new Date().getFullYear()
+    return d ? d.getFullYear() : Number(todayYMD().slice(0, 4))
   })
   const [viewMonth, setViewMonth] = React.useState(() => {
     const d = parseYMD(value)
-    return d ? d.getMonth() : new Date().getMonth()
+    return d ? d.getMonth() : Number(todayYMD().slice(5, 7)) - 1
   })
   const [pos, setPos] = React.useState({ top: 0, left: 0 })
   const triggerRef = React.useRef<HTMLButtonElement>(null)
@@ -141,7 +143,7 @@ export function CustomDatePicker({
   const firstDay = new Date(viewYear, viewMonth, 1).getDay()
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
   const daysInPrev = new Date(viewYear, viewMonth, 0).getDate()
-  const todayYMD = toYMD(new Date())
+  const todayJst = todayYMD()
 
   const cells: { ymd: string; day: number; otherMonth: boolean }[] = []
   // Previous month tail
@@ -199,7 +201,7 @@ export function CustomDatePicker({
               type="button"
               className="cdp__day"
               data-selected={String(c.ymd === value)}
-              data-today={String(c.ymd === todayYMD)}
+              data-today={String(c.ymd === todayJst)}
               data-other-month={String(c.otherMonth)}
               data-sun={String(dow === 0)}
               data-sat={String(dow === 6)}
@@ -211,7 +213,7 @@ export function CustomDatePicker({
         })}
       </div>
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button type="button" className="cdp__today-btn" style={{ marginTop: 0, flex: 1 }} onClick={() => { select(todayYMD); setViewYear(new Date().getFullYear()); setViewMonth(new Date().getMonth()) }}>
+        <button type="button" className="cdp__today-btn" style={{ marginTop: 0, flex: 1 }} onClick={() => { select(todayJst); setViewYear(Number(todayJst.slice(0, 4))); setViewMonth(Number(todayJst.slice(5, 7)) - 1) }}>
           今日
         </button>
         {!required && value && (

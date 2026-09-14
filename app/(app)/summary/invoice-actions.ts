@@ -5,6 +5,7 @@ import { nextInvoiceNo } from '@/lib/invoice-number'
 import { renderInvoicePdf } from '@/lib/pdf'
 import { calcWithholding } from '@/lib/withholding'
 import type { Contract, WorkLog } from '@/lib/types'
+import { nextYm, monthRange, todayYMD } from '@/lib/ym'
 
 // 消費税率（税別契約の上乗せ分）。全案件を税別・標準税率10%として扱う。
 // 税込・軽減税率のクライアントが出た場合はここを契約/設定ベースに切り替える。
@@ -22,9 +23,7 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
   const whRate = taxSettings?.withholding_rate ?? 0.1021
   const whRateHigh = taxSettings?.withholding_rate_high ?? 0.2042
 
-  const monthStart = `${yearMonth}-01`
-  const lastDay = new Date(Number(yearMonth.slice(0, 4)), Number(yearMonth.slice(5, 7)), 0).getDate()
-  const monthEnd = `${yearMonth}-${String(lastDay).padStart(2, '0')}`
+  const { start: monthStart, end: monthEnd } = monthRange(yearMonth)
 
   const [{ data: contracts }, { data: logs }] = await Promise.all([
     supabase.from('contracts').select('*').eq('client_id', clientId).eq('is_active', true),
@@ -46,13 +45,9 @@ export async function generateInvoicePdf(clientId: string, yearMonth: string, me
   const { data: existingInvoices } = await supabase.from('invoices').select('invoice_no').eq('year_month', yearMonth)
   const existingNos = ((existingInvoices ?? []) as { invoice_no: string }[]).map(i => i.invoice_no)
   const invoiceNo = nextInvoiceNo(yearMonth, existingNos)
-  const issueDate = new Date().toISOString().slice(0, 10)
+  const issueDate = todayYMD()
   // 入金予定日の既定 = 翌月末
-  const [iy, im] = issueDate.split('-').map(Number)
-  const dueY = im === 12 ? iy + 1 : iy
-  const dueM = im === 12 ? 1 : im + 1
-  const dueLast = new Date(dueY, dueM, 0).getDate()
-  const dueDate = `${dueY}-${String(dueM).padStart(2, '0')}-${String(dueLast).padStart(2, '0')}`
+  const dueDate = monthRange(nextYm(issueDate.slice(0, 7))).end
 
   const pdfBytes = await renderInvoicePdf({
     invoiceNo,

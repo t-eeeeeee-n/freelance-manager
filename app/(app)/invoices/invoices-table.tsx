@@ -4,6 +4,7 @@ import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
 import { CustomDatePicker } from '@/components/custom-date-picker'
 import { markPaid, markUnpaid, updateDueDate, deleteInvoice } from './payment-actions'
+import { todayYMD } from '@/lib/ym'
 
 export interface InvoiceRow {
   id: string
@@ -21,7 +22,7 @@ export interface InvoiceRow {
 }
 
 const yen = (n: number) => Math.round(n).toLocaleString('ja-JP')
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => todayYMD()
 
 export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
   const toast = useToast()

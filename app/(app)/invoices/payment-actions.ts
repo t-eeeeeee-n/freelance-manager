@@ -1,10 +1,11 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { todayYMD } from '@/lib/ym'
 
 export async function markPaid(id: string) {
   const supabase = await createClient()
-  const paid_date = new Date().toISOString().slice(0, 10)
+  const paid_date = todayYMD()
   const { error } = await supabase.from('invoices')
     .update({ status: 'paid', paid_date }).eq('id', id)
   if (error) return { error: '更新に失敗しました' }

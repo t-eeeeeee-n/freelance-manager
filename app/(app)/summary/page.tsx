@@ -5,21 +5,18 @@ import { BillingChip } from '@/components/page-chrome'
 import { Icon } from '@/components/icon'
 import Link from 'next/link'
 import { InvoiceButton } from './invoice-button'
+import { currentYm, prevYm, nextYm, ymLabel, monthRange } from '@/lib/ym'
 
 export default async function SummaryPage({ searchParams }: { searchParams: Promise<{ ym?: string }> }) {
   const { ym } = await searchParams
-  const yearMonth = ym ?? new Date().toISOString().slice(0, 7)
-  const monthStart = `${yearMonth}-01`
-  const lastDay = new Date(Number(yearMonth.slice(0, 4)), Number(yearMonth.slice(5, 7)), 0).getDate()
-  const monthEnd = `${yearMonth}-${String(lastDay).padStart(2, '0')}`
-  const ymLabel = (s: string) => { const [y, m] = s.split('-'); return `${y}年${Number(m)}月` }
+  const yearMonth = ym ?? currentYm()
+  const { start: monthStart, end: monthEnd } = monthRange(yearMonth)
   const yen = (n: number | null) => n == null ? '-' : Math.round(n).toLocaleString('ja-JP')
   const hrs = (n: number | null) => n == null ? '-' : (Number.isInteger(n) ? `${n}h` : `${n.toFixed(1)}h`)
 
   // prev/next month for navigation links
-  const [y, m] = yearMonth.split('-').map(Number)
-  const prev = m === 1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,'0')}`
-  const next = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`
+  const prev = prevYm(yearMonth)
+  const next = nextYm(yearMonth)
 
   const supabase = await createClient()
   const [{ data: contracts }, { data: logs }, { data: expenses }, { data: clients }] = await Promise.all([

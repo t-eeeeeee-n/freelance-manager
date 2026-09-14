@@ -9,10 +9,10 @@ import { StatusChip } from '@/components/page-chrome'
 import { CustomSelect } from '@/components/custom-select'
 import { CustomTimePicker } from '@/components/custom-time-picker'
 import { CustomDatePicker } from '@/components/custom-date-picker'
+import { todayYMD, currentYm, shiftYm, ymLabel, dateLabel } from '@/lib/ym'
 
-function toYMD(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+const CUR_YM = currentYm()
+
 function calcHours(start: string, end: string, breakMins: number) {
   const [sh, sm] = start.split(':').map(Number)
   const [eh, em] = end.split(':').map(Number)
@@ -27,12 +27,17 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
   const router = useRouter()
   const clientMap = Object.fromEntries(clients.map(c => [c.id, c.name]))
   const [activeContractId, setActiveContractId] = React.useState(contracts[0]?.id ?? '')
+  const [ym, setYm] = React.useState(CUR_YM)
   const [showForm, setShowForm] = React.useState(false)
   const [editingLog, setEditingLog] = React.useState<WorkLog | null>(null)
 
   const activeContract = contracts.find(c => c.id === activeContractId)
-  const contractLogs = logs.filter(l => l.contract_id === activeContractId)
+  const contractLogs = logs
+    .filter(l => l.contract_id === activeContractId && l.work_date.startsWith(ym))
     .sort((a, b) => a.work_date < b.work_date ? 1 : -1)
+  const monthHours = contractLogs.reduce((s, l) => s + (l.actual_hours ?? 0), 0)
+  // 表示中の月に記録するのが自然。今月を見ているときだけ今日を初期値にする。
+  const defaultDate = ym === CUR_YM ? todayYMD() : `${ym}-01`
 
   // Switch tabs: close form and editing
   const switchTab = (contractId: string) => {
@@ -101,12 +106,24 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
       {/* ── Tab content ── */}
       {activeContract && (
         <>
+          <div className="toolbar">
+            <div className="ymselect">
+              <button className="nav" onClick={() => setYm(shiftYm(ym, -1))} aria-label="前月"><Icon name="chevL" size={16} /></button>
+              <span className="cur num">{ymLabel(ym)}</span>
+              <button className="nav" onClick={() => setYm(shiftYm(ym, 1))} aria-label="翌月"><Icon name="chevR" size={16} /></button>
+            </div>
+          </div>
+
           {/* テーブルヘッダー + 記録ボタン（右寄せ） */}
           <div className="tablecard">
             <div className="tablecard__head">
-              <h2>稼働履歴</h2>
+              <h2>{ymLabel(ym)}の稼働</h2>
               <span className="count">{contractLogs.length}件</span>
               <span className="spacer" />
+              <span className="dim" style={{ fontSize: 'var(--small)' }}>実働合計</span>
+              <span className="num" style={{ fontWeight: 700, fontSize: 'var(--h2)' }}>
+                {Math.round(monthHours * 10) / 10}h
+              </span>
               {!showForm && !editingLog && (
                 <button className="btn btn--primary btn--sm" onClick={() => setShowForm(true)}>
                   <Icon name="plus" size={14} />稼働を記録
@@ -130,14 +147,14 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
                     <tr><td colSpan={6}>
                       <div className="empty">
                         <div className="empty__icon"><Icon name="clock" size={22} /></div>
-                        <p>まだ稼働が記録されていません</p>
+                        <p>{ymLabel(ym)}の稼働は記録されていません</p>
                       </div>
                     </td></tr>
                   )}
                   {contractLogs.map(l => (
                     <tr key={l.id}>
                       <td className="num" style={{ fontWeight: 600 }}>
-                        {l.work_date.slice(5).replace('-', '/')}
+                        {dateLabel(l.work_date)}
                       </td>
                       <td className="ar num dim" style={{ fontSize: 'var(--small)' }}>
                         {l.actual_start_time && l.actual_end_time
@@ -202,10 +219,10 @@ export function WorkLogsUI({ logs, contracts, clients }: { logs: WorkLog[]; cont
 
             {(showForm || editingLog) && (
               <QuickForm
-                key={editingLog ? 'edit-' + editingLog.id : activeContractId}
+                key={editingLog ? 'edit-' + editingLog.id : `${activeContractId}-${ym}`}
                 contractId={editingLog?.contract_id ?? activeContractId}
                 clientId={editingLog?.client_id ?? activeContract.client_id}
-                initialDate={editingLog?.work_date}
+                initialDate={editingLog?.work_date ?? defaultDate}
                 existing={editingLog ?? undefined}
                 onSave={editingLog
                   ? (fd) => handleUpdate(editingLog.id, fd)
@@ -228,7 +245,7 @@ function QuickForm({
   initialDate?: string; existing?: WorkLog
   onSave: (fd: FormData) => Promise<void>; onCancel: () => void
 }) {
-  const [date, setDate] = React.useState(existing?.work_date ?? initialDate ?? toYMD(new Date()))
+  const [date, setDate] = React.useState(existing?.work_date ?? initialDate ?? todayYMD())
   const [startTime, setStartTime] = React.useState(existing?.actual_start_time?.slice(0, 5) ?? '')
   const [endTime, setEndTime] = React.useState(existing?.actual_end_time?.slice(0, 5) ?? '')
   const [breakMins, setBreakMins] = React.useState(existing?.break_minutes ?? 0)

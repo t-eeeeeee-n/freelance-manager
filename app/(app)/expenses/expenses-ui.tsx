@@ -6,19 +6,12 @@ import { useEditor, Drawer, EditorShell, Field } from '@/components/drawer'
 import { useToast } from '@/components/toast'
 import { Icon } from '@/components/icon'
 import { CustomDatePicker } from '@/components/custom-date-picker'
+import { currentYm, shiftYm, prevYm, ymLabel, dateLabel } from '@/lib/ym'
 
 const EXP_CATS = ['wifi', 'rent', 'mobile', 'saas', 'travel', 'book', 'tax']
 const CAT_LABEL: Record<string, string> = { wifi: '通信(WiFi)', rent: '家賃', mobile: '携帯', saas: 'SaaS', travel: '交通費', book: '書籍', tax: '税理士' }
 
-function shiftYm(ym: string, n: number) {
-  const [y, m] = ym.split('-').map(Number)
-  const d = new Date(y, m - 1 + n, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-function prevYm(ym: string) { return shiftYm(ym, -1) }
-function ymLabel(ym: string) { const [y, m] = ym.split('-'); return `${y}年${Number(m)}月` }
-function dateLabel(d: string) { const t = new Date(d + 'T00:00'); const w = '日月火水木金土'[t.getDay()]; return `${t.getMonth() + 1}/${t.getDate()}(${w})` }
-const CUR_YM = new Date().toISOString().slice(0, 7)
+const CUR_YM = currentYm()
 
 export function ExpensesUI({ expenses }: { expenses: Expense[] }) {
   const toast = useToast()
